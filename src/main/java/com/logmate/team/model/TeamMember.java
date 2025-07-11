@@ -1,6 +1,6 @@
-package com.logmate.team;
+package com.logmate.team.model;
 
-import com.logmate.user.User;
+import com.logmate.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 

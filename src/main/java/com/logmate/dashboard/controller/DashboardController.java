@@ -1,5 +1,6 @@
-package com.logmate.dashboard;
+package com.logmate.dashboard.controller;
 
+import com.logmate.dashboard.service.DashboardService;
 import com.logmate.dashboard.dto.DashboardRequest;
 import com.logmate.dashboard.dto.DashboardDto;
 import lombok.RequiredArgsConstructor;

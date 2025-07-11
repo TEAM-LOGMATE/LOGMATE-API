@@ -1,6 +1,6 @@
 package com.logmate.dashboard.dto;
 
-import com.logmate.dashboard.Dashboard;
+import com.logmate.dashboard.model.Dashboard;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

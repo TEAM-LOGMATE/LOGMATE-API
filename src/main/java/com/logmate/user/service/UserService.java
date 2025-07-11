@@ -1,6 +1,8 @@
-package com.logmate.user;
+package com.logmate.user.service;
 
 import com.logmate.auth.util.JwtUtil;
+import com.logmate.user.model.User;
+import com.logmate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

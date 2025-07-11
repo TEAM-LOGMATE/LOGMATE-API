@@ -1,5 +1,6 @@
-package com.logmate.user;
+package com.logmate.user.repository;
 
+import com.logmate.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

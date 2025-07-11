@@ -1,4 +1,4 @@
-package com.logmate.user;
+package com.logmate.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;

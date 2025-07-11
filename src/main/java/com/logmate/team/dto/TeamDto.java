@@ -1,6 +1,6 @@
 package com.logmate.team.dto;
 
-import com.logmate.team.Team;
+import com.logmate.team.model.Team;
 import lombok.Getter;
 
 @Getter

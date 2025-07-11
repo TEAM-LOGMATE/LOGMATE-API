@@ -1,9 +1,11 @@
-package com.logmate.team;
+package com.logmate.team.service;
 
 import com.logmate.team.dto.TeamDto;
+import com.logmate.team.model.Team;
+import com.logmate.team.model.TeamMember;
 import com.logmate.team.repository.TeamMemberRepository;
 import com.logmate.team.repository.TeamRepository;
-import com.logmate.user.User;
+import com.logmate.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

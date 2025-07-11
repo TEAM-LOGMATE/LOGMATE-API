@@ -1,10 +1,11 @@
-package com.logmate.team;
+package com.logmate.team.controller;
 
 
+import com.logmate.team.service.TeamService;
 import com.logmate.team.dto.CreateTeamRequest;
 import com.logmate.team.dto.TeamDto;
-import com.logmate.user.User;
-import com.logmate.user.UserRepository;
+import com.logmate.user.model.User;
+import com.logmate.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

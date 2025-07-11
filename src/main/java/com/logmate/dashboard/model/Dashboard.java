@@ -1,6 +1,6 @@
-package com.logmate.dashboard;
+package com.logmate.dashboard.model;
 
-import com.logmate.team.Team;
+import com.logmate.team.model.Team;
 import jakarta.persistence.*;
 import lombok.*;
 

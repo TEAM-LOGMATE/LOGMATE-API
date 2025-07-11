@@ -1,9 +1,10 @@
-package com.logmate.dashboard;
+package com.logmate.dashboard.service;
 
 import com.logmate.dashboard.dto.DashboardRequest;
 import com.logmate.dashboard.dto.DashboardDto;
+import com.logmate.dashboard.model.Dashboard;
 import com.logmate.dashboard.repository.DashboardRepository;
-import com.logmate.team.Team;
+import com.logmate.team.model.Team;
 import com.logmate.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

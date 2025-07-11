@@ -1,8 +1,10 @@
-package com.logmate.user;
+package com.logmate.user.controller;
 
 import com.logmate.auth.dto.LoginRequest;
 import com.logmate.auth.dto.LoginResponse;
 import com.logmate.auth.util.TokenBlacklist;
+import com.logmate.user.service.UserService;
+import com.logmate.user.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
