@@ -3,6 +3,7 @@ package com.logmate.auth.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -36,4 +37,9 @@ public class JwtUtil {
             throw new RuntimeException("Invalid JWT token");
         }
     }
+    public String extractEmailFromRequest(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").substring(7);
+        return validateAndGetEmail(token);
+    }
+
 }
