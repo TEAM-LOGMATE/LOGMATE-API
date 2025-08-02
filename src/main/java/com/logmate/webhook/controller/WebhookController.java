@@ -1,0 +1,50 @@
+package com.logmate.webhook.controller;
+
+import com.logmate.user.model.User;
+import com.logmate.user.repository.UserRepository;
+import com.logmate.webhook.dto.WebhookRequestDto;
+import com.logmate.webhook.dto.WebhookResponseDto;
+import com.logmate.webhook.service.WebhookService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/webhooks")
+@RequiredArgsConstructor
+public class WebhookController {
+
+    private final WebhookService webhookService;
+    private final UserRepository userRepository;
+
+    //등록
+    @PostMapping
+    public ResponseEntity<WebhookResponseDto> register(
+            @RequestBody WebhookRequestDto dto,
+            HttpServletRequest request
+    ) {
+        String email = (String) request.getAttribute("email");
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+        return ResponseEntity.ok(webhookService.register(user.getId(), dto));
+    }
+
+    //테스트
+    @PostMapping("/test")
+    public ResponseEntity<Void> testWebhook(@RequestParam String url) {
+        webhookService.testSend(url);
+        return ResponseEntity.ok().build();
+    }
+
+    //등록된 Webhook으로 알림 전송
+    @PostMapping("/trigger")
+    public ResponseEntity<Void> trigger(
+            @AuthenticationPrincipal Long userId,//추후 인증처리 하는걸로
+            @RequestParam String message
+    ) {
+        webhookService.sendEventToUserWebhooks(userId, message);
+        return ResponseEntity.ok().build();
+    }
+}
