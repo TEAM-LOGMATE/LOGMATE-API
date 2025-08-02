@@ -25,4 +25,10 @@ public class TeamMember {
     private User user;
 
     private String role; // TODO 협의 필요: 관리자인지 멤버인지
+
+    public TeamMember(Team team, User user, String role) {
+        this.team = team;
+        this.user = user;
+        this.role = role;
+    }
 }
