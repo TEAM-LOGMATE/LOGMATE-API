@@ -1,6 +1,8 @@
 package com.logmate.team.controller;
 
 
+import com.logmate.team.dto.UpdateTeamMemberRoleRequest;
+import com.logmate.team.dto.UpdateTeamRequest;
 import com.logmate.team.service.TeamService;
 import com.logmate.team.dto.CreateTeamRequest;
 import com.logmate.team.dto.TeamDto;
@@ -37,7 +39,27 @@ public class TeamController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
-        TeamDto created = teamService.createTeam(request.getName(), user);
+        TeamDto created = teamService.createTeam(request, user);
         return ResponseEntity.ok(created);
+    }
+
+    @PutMapping("/{teamId}")
+    public ResponseEntity<TeamDto> updateTeam(@PathVariable Long teamId,
+                                              @RequestBody UpdateTeamRequest request) {
+        TeamDto updated = teamService.updateTeam(teamId, request);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/{teamId}/members/role")
+    public ResponseEntity<Void> updateMemberRole(@PathVariable Long teamId,
+                                                 @RequestBody UpdateTeamMemberRoleRequest request) {
+        teamService.updateTeamMemberRole(teamId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{teamId}/invite")
+    public ResponseEntity<String> getInviteUrl(@PathVariable Long teamId) {
+        String url = teamService.generateInviteUrl(teamId);
+        return ResponseEntity.ok(url);
     }
 }
