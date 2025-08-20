@@ -41,10 +41,18 @@ public class TeamService {
         List<TeamMember> members = new ArrayList<>();
         members.add(new TeamMember(team, creator, "OWNER"));
 
-        for (Long id : request.getMemberIds()) {
-            if (!id.equals(creator.getId())) {
-                User user = userRepository.findById(id).orElseThrow();
-                members.add(new TeamMember(team, user, "MEMBER"));
+        if (request.getMembers() != null) {
+            for (var memberReq : request.getMembers()) {
+                if (!memberReq.getUserId().equals(creator.getId())) {
+                    User user = userRepository.findById(memberReq.getUserId())
+                            .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
+
+                    String role = (memberReq.getRole() == null || memberReq.getRole().isBlank())
+                            ? "MEMBER" // 기본값
+                            : memberReq.getRole().toUpperCase(); // admin, member, viewer → ADMIN, MEMBER, VIEWER 로 변환
+
+                    members.add(new TeamMember(team, user, role));
+                }
             }
         }
 
