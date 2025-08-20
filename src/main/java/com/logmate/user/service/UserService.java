@@ -16,10 +16,29 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
+    private void validatePassword(String password, String email) {
+        // 최소 8자
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("비밀번호는 최소 8자 이상이어야 합니다.");
+        }
+        // 영어, 숫자, 특수문자 조합
+        String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}\\[\\]:;\"'<>,.?/]).+$";
+        if (!password.matches(regex)) {
+            throw new IllegalArgumentException("비밀번호는 영어, 숫자, 특수문자를 모두 포함해야 합니다.");
+        }
+        // 이메일과 동일한지 검사
+        if (password.equalsIgnoreCase(email)) {
+            throw new IllegalArgumentException("비밀번호는 이메일과 동일할 수 없습니다.");
+        }
+    }
+
     public User register(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
+        //비밀번호 유효성 검증
+        validatePassword(user.getPassword(), user.getEmail());
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
@@ -56,6 +75,8 @@ public class UserService {
         }
 
         if (updateUserRequest.getPassword() != null) {
+            //비밀번호 유효성 검증
+            validatePassword(updateUserRequest.getPassword(), user.getEmail());
             user.setPassword(passwordEncoder.encode(updateUserRequest.getPassword()));
         }
 
