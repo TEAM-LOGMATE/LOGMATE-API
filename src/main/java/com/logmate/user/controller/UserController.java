@@ -2,16 +2,15 @@ package com.logmate.user.controller;
 
 import com.logmate.auth.dto.LoginRequest;
 import com.logmate.auth.dto.LoginResponse;
+import com.logmate.auth.util.JwtUtil;
 import com.logmate.auth.util.TokenBlacklist;
+import com.logmate.user.dto.UpdateUserRequest;
 import com.logmate.user.service.UserService;
 import com.logmate.user.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,6 +19,7 @@ public class UserController {
 
     private final UserService userService;
     private final TokenBlacklist tokenBlacklist;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
@@ -44,5 +44,27 @@ public class UserController {
         }
 
         return ResponseEntity.badRequest().body("토큰 없음");
+    }
+
+    @GetMapping("/mypage")
+    public ResponseEntity<?> getMyPage(HttpServletRequest request) {
+        String email = jwtUtil.extractEmailFromRequest(request);
+        User user = userService.getUserByEmail(email);
+        return ResponseEntity.ok(user);
+    }
+
+    @PatchMapping("/mypage")
+    public ResponseEntity<?> updateMyProfile(@RequestBody UpdateUserRequest request, HttpServletRequest httpRequest) {
+        String currentEmail = jwtUtil.extractEmailFromRequest(httpRequest);
+        userService.updateUser(currentEmail, request);
+        return ResponseEntity.ok("수정 완료");
+    }
+
+    //TODO soft delete 실행 유무 협의
+    @DeleteMapping("/mypage")
+    public ResponseEntity<?> deleteMyAccount(HttpServletRequest httpRequest) {
+        String email = jwtUtil.extractEmailFromRequest(httpRequest);
+        userService.deleteUser(email);
+        return ResponseEntity.ok("계정 탈퇴 와료");
     }
 }

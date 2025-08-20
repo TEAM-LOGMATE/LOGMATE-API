@@ -1,8 +1,10 @@
 package com.logmate.user.service;
 
 import com.logmate.auth.util.JwtUtil;
+import com.logmate.user.dto.UpdateUserRequest;
 import com.logmate.user.model.User;
 import com.logmate.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,5 +37,35 @@ public class UserService {
         }
 
         return jwtUtil.generateToken(email);
+    }
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    }
+
+    @Transactional
+    public void updateUser(String currentEmail, UpdateUserRequest updateUserRequest) {
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (updateUserRequest.getEmail() != null && !updateUserRequest.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(updateUserRequest.getEmail())) {
+                throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            }
+            user.setEmail(updateUserRequest.getEmail());
+        }
+
+        if (updateUserRequest.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(updateUserRequest.getPassword()));
+        }
+
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteUser(String email) {
+        User user = userRepository.findByEmailIncludingInactive(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        userRepository.delete(user);
     }
 }

@@ -20,6 +20,8 @@ public class Team {
 
     private String name;
 
+    private String description;
+
     // 팀 <-> 멤버 : teamMember 통해 연결
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL,  orphanRemoval = true)
     @Builder.Default
