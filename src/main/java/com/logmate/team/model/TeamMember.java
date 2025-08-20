@@ -24,9 +24,10 @@ public class TeamMember {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String role; // TODO 협의 필요: 관리자인지 멤버인지
+    @Enumerated(EnumType.STRING)  // DB에 문자열로 저장
+    private MemberRole role;
 
-    public TeamMember(Team team, User user, String role) {
+    public TeamMember(Team team, User user, MemberRole role) {
         this.team = team;
         this.user = user;
         this.role = role;

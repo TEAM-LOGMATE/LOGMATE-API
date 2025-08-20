@@ -4,6 +4,7 @@ import com.logmate.team.dto.CreateTeamRequest;
 import com.logmate.team.dto.TeamDto;
 import com.logmate.team.dto.UpdateTeamMemberRoleRequest;
 import com.logmate.team.dto.UpdateTeamRequest;
+import com.logmate.team.model.MemberRole;
 import com.logmate.team.model.Team;
 import com.logmate.team.model.TeamMember;
 import com.logmate.team.repository.TeamMemberRepository;
@@ -39,7 +40,7 @@ public class TeamService {
                 .description(request.getDescription())
                 .build();
         List<TeamMember> members = new ArrayList<>();
-        members.add(new TeamMember(team, creator, "OWNER"));
+        members.add(new TeamMember(team, creator, MemberRole.ADMIN));
 
         if (request.getMembers() != null) {
             for (var memberReq : request.getMembers()) {
@@ -47,10 +48,7 @@ public class TeamService {
                     User user = userRepository.findById(memberReq.getUserId())
                             .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
 
-                    String role = (memberReq.getRole() == null || memberReq.getRole().isBlank())
-                            ? "MEMBER" // 기본값
-                            : memberReq.getRole().toUpperCase(); // admin, member, viewer → ADMIN, MEMBER, VIEWER 로 변환
-
+                    MemberRole role = (memberReq.getRole() == null) ? MemberRole.MEMBER : memberReq.getRole();
                     members.add(new TeamMember(team, user, role));
                 }
             }
