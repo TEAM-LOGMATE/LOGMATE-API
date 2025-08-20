@@ -1,8 +1,10 @@
-package com.logmate.agentConfig;
+package com.logmate.agentConfig.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.logmate.agentConfig.repository.AgentConfigurationRepository;
 import com.logmate.agentConfig.dto.ConfigDTO;
+import com.logmate.agentConfig.model.AgentConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

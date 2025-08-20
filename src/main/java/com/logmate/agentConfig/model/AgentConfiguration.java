@@ -1,4 +1,4 @@
-package com.logmate.agentConfig;
+package com.logmate.agentConfig.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
