@@ -11,6 +11,7 @@ import com.logmate.team.repository.TeamMemberRepository;
 import com.logmate.team.repository.TeamRepository;
 import com.logmate.user.model.User;
 import com.logmate.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -57,19 +58,52 @@ public class TeamService {
         team.setMembers(members);
         return new TeamDto(teamRepository.save(team));
     }
-    // TODO 관리자가 아닌 유저 (팀 멤버) 를 팀에 추가하는 로직 구현하기
-
     public String generateInviteUrl(Long teamId) {
         String code = UUID.randomUUID().toString();
         return "https://logmate.com/invite/" + code;
     }
 
-    public TeamDto updateTeam(Long teamId, UpdateTeamRequest request) {
+    @Transactional
+    public TeamDto updateTeam(Long teamId, UpdateTeamRequest request, User requester) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("팀 없음"));
+                .orElseThrow(() -> new IllegalArgumentException("팀 없음"));
 
-        team.setName(request.getName());
-        team.setDescription(request.getDescription());
+        if (request.getName() != null) team.setName(request.getName());
+        if (request.getDescription() != null) team.setDescription(request.getDescription());
+
+        //요청자 권한 확인
+        TeamMember requesterMember = teamMemberRepository.findByUserIdAndTeamId(requester.getId(), teamId)
+                .orElseThrow(() -> new IllegalArgumentException("팀 멤버가 아님"));
+
+        boolean isAdmin = requesterMember.getRole() == MemberRole.ADMIN;
+
+        if (request.getMembers() != null) {
+            for (var memberReq : request.getMembers()) {
+                TeamMember member = teamMemberRepository.findByUserIdAndTeamId(memberReq.getUserId(), teamId)
+                        .orElseThrow(() -> new IllegalArgumentException("팀 멤버 없음"));
+
+                // 삭제 요청
+                if (memberReq.isRemove()) {
+                    boolean isSelf = member.getUser().getId().equals(requester.getId());
+
+                    if(isSelf){
+                        if(isAdmin){throw new IllegalArgumentException("관리자는 자기 자신을 삭제할 수 없습니다.");}
+                        teamMemberRepository.delete(member);
+                    }else {
+                        if (!isAdmin) {throw new IllegalArgumentException("관리자만 다른 멤버를 삭제할 수 있습니다.");}
+                        teamMemberRepository.delete(member);
+                    }
+                    continue;
+                }
+
+                // 역할 변경 요청
+                if (memberReq.getRole() != null) {
+                    if (!isAdmin) {throw new IllegalArgumentException("관리자만 역할을 변경할 수 있습니다.");}
+                    member.setRole(memberReq.getRole());
+                    teamMemberRepository.save(member);
+                }
+            }
+        }
 
         Team updated = teamRepository.save(team);
         return new TeamDto(updated);

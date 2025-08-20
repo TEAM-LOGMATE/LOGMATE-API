@@ -35,7 +35,7 @@ public class TeamController {
 
     @PostMapping
     public ResponseEntity<BaseResponse<TeamDto>> createTeam(@RequestBody CreateTeamRequest request,
-                                              HttpServletRequest httpRequest) {
+                                                            HttpServletRequest httpRequest) {
         String email = (String) httpRequest.getAttribute("email");
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
@@ -47,10 +47,17 @@ public class TeamController {
     }
 
     @PutMapping("/{teamId}")
-    public ResponseEntity<TeamDto> updateTeam(@PathVariable Long teamId,
-                                              @RequestBody UpdateTeamRequest request) {
-        TeamDto updated = teamService.updateTeam(teamId, request);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<BaseResponse<TeamDto>> updateTeam(@PathVariable Long teamId,
+                                                            @RequestBody UpdateTeamRequest request,
+                                                            HttpServletRequest httpRequest) {
+        String email = (String) httpRequest.getAttribute("email");
+        User requester = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+        TeamDto updated = teamService.updateTeam(teamId, request, requester);
+        return ResponseEntity.ok(
+                BaseResponse.of(200, "팀 수정 성공", updated)
+        );
     }
 
     @PutMapping("/{teamId}/members/role")
