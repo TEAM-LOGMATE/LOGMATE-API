@@ -8,5 +8,5 @@ import java.util.List;
 public class CreateTeamRequest {
     private String name;
     private String description;
-    private List<Long> memberIds;
+    private List<MemberRoleRequest> members;
 }

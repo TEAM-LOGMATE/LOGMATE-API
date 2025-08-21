@@ -27,7 +27,7 @@ public class WebhookController {
     ) {
         String email = (String) request.getAttribute("email");
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+                .orElseThrow(() -> new SecurityException("인증되지 않은 사용자입니다"));
         return ResponseEntity.ok(webhookService.register(user.getId(), dto));
     }
 

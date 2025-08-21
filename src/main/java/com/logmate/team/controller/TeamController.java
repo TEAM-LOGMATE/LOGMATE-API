@@ -1,6 +1,7 @@
 package com.logmate.team.controller;
 
 
+import com.logmate.global.BaseResponse;
 import com.logmate.team.dto.UpdateTeamMemberRoleRequest;
 import com.logmate.team.dto.UpdateTeamRequest;
 import com.logmate.team.service.TeamService;
@@ -33,21 +34,30 @@ public class TeamController {
     }
 
     @PostMapping
-    public ResponseEntity<TeamDto> createTeam(@RequestBody CreateTeamRequest request,
-                                              HttpServletRequest httpRequest) {
+    public ResponseEntity<BaseResponse<TeamDto>> createTeam(@RequestBody CreateTeamRequest request,
+                                                            HttpServletRequest httpRequest) {
         String email = (String) httpRequest.getAttribute("email");
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
         TeamDto created = teamService.createTeam(request, user);
-        return ResponseEntity.ok(created);
+        return ResponseEntity.ok(
+                BaseResponse.of(200, "팀 생성 성공", created)
+        );
     }
 
     @PutMapping("/{teamId}")
-    public ResponseEntity<TeamDto> updateTeam(@PathVariable Long teamId,
-                                              @RequestBody UpdateTeamRequest request) {
-        TeamDto updated = teamService.updateTeam(teamId, request);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<BaseResponse<TeamDto>> updateTeam(@PathVariable Long teamId,
+                                                            @RequestBody UpdateTeamRequest request,
+                                                            HttpServletRequest httpRequest) {
+        String email = (String) httpRequest.getAttribute("email");
+        User requester = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
+        TeamDto updated = teamService.updateTeam(teamId, request, requester);
+        return ResponseEntity.ok(
+                BaseResponse.of(200, "팀 수정 성공", updated)
+        );
     }
 
     @PutMapping("/{teamId}/members/role")

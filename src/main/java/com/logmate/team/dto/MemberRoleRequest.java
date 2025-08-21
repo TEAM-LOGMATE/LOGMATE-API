@@ -4,8 +4,7 @@ import com.logmate.team.model.MemberRole;
 import lombok.Getter;
 
 @Getter
-public class UpdateTeamMemberRoleRequest {
+public class MemberRoleRequest {
     private Long userId;
-    private MemberRole role;
-    private boolean remove;
+    private MemberRole role; // admin, member, viewer
 }
