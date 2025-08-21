@@ -103,23 +103,10 @@ Agent(Tail Mate)가 API 서버로부터 설정(Configuration)과 인증 정보�
     ├── repository/             # DB 연동
     └── service/                # Webhook 처리 로직
 ```
-## 📦 설치 및 실행
-
-### 1. 요구 사항
-- Java 17+
-- 운영 체제: Linux/macOS/Windows
-
-### 2. 실행 방법
-
-#### ✅ 빌드 및 직접 실행
-```bash
-git clone https://github.com/your-org/logmate-api.git
-cd logmate-api
-./gradlew build
-java -jar build/libs/logmate-api.jar
-```
-
-### 📄 오픈소스 라이선스
+## 📦 API 명세서
+[명세서 노션 링크](https://rural-column-222.notion.site/API-255d02fced5a802582f3c7e557485ce2?source=copy_link)
+---
+## 📄 오픈소스 라이선스
 
 본 프로젝트는 아래의 오픈소스 라이브러리를 사용합니다:
 
@@ -134,20 +121,20 @@ java -jar build/libs/logmate-api.jar
 
 ---
 
-### 📄 라이선스
+## 📄 라이선스
 본 프로젝트는 **Apache License 2.0** 에 따라 라이선스가 부여됩니다.
 자세한 내용은 [LICENSE](./LICENSE) 파일을 참조하세요.
 
 ---
 
-### 🙏 기여 가이드
+## 🙏 기여 가이드
 - PR 생성은 [pull_request_template.md](.github/pull_request_template.md) 문서를 참고해 주세요.
 - Issue 생성은 [issue_report.md](.github/ISSUE_TEMPLATE/issue_report.md) 문서를 참고해 주세요.
 - API 구조와 기능 정의는 추후 [Wiki]에서 확인하실 수 있습니다.
 
 ---
 
-### 📲 연락처
+## 📲 연락처
 email: jjjjyy020704@naver.com
 
 ---
