@@ -105,6 +105,7 @@ Agent(Tail Mate)가 API 서버로부터 설정(Configuration)과 인증 정보�
 ```
 ## 📦 API 명세서
 [명세서 노션 링크](https://rural-column-222.notion.site/API-255d02fced5a802582f3c7e557485ce2?source=copy_link)
+
 ---
 ## 📄 오픈소스 라이선스
 
