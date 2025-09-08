@@ -1,8 +1,10 @@
 package com.logmate.dashboard.model;
 
+import com.logmate.global.BaseEntity;
 import com.logmate.team.model.Team;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Getter
@@ -10,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Dashboard {
+public class Dashboard extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

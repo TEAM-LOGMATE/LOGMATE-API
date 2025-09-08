@@ -4,6 +4,8 @@ import com.logmate.dashboard.model.Dashboard;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.format.DateTimeFormatter;
+
 @Getter
 @AllArgsConstructor
 public class DashboardDto {
@@ -11,13 +13,17 @@ public class DashboardDto {
     private String name;
     private String logPath;
     private String sendTo;
+    private String lastModified;
 
     public static DashboardDto from(Dashboard dashboard) {
         return new DashboardDto(
                 dashboard.getId(),
                 dashboard.getName(),
                 dashboard.getLogPath(),
-                dashboard.getSendUrl()
+                dashboard.getSendUrl(),
+                dashboard.getUpdatedAt() != null
+                        ? dashboard.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+                        : null
         );
     }
 }
