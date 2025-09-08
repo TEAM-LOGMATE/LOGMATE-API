@@ -1,5 +1,6 @@
 package com.logmate.user.service;
 
+import com.logmate.auth.dto.LoginResponse;
 import com.logmate.auth.util.JwtUtil;
 import com.logmate.user.dto.UpdateUserRequest;
 import com.logmate.user.model.User;
@@ -43,7 +44,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public String login(String email, String password) {
+    public LoginResponse login(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
@@ -55,7 +56,9 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        return jwtUtil.generateToken(email);
+        String token = jwtUtil.generateToken(email);
+
+        return new LoginResponse(token, user.getId(), user.getEmail());
     }
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
