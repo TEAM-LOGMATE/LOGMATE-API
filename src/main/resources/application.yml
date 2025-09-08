@@ -2,9 +2,9 @@ spring:
   application:
     name: logmate
   datasource:
-    url: jdbc:mysql://localhost:3306/logmate_db?serverTimezone=Asia/Seoul
-    username: root
-    password: root
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,4 +18,4 @@ spring:
       add-mappings: false
 
 server:
-  port: 8080
+  port: 8081
