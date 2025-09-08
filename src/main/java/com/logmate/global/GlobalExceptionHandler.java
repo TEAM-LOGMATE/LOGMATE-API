@@ -58,5 +58,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<BaseErrorResponse> handleCustomException(CustomException ex, HttpServletRequest request) {
+        BaseErrorResponse error = BaseErrorResponse.of(
+                ex.getStatus().value(),
+                ex.getStatus().getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(ex.getStatus()).body(error);
+    }
+
 
 }
