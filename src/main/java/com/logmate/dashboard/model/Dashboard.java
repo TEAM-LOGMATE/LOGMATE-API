@@ -1,6 +1,6 @@
 package com.logmate.dashboard.model;
 
-import com.logmate.folder.Folder;
+import com.logmate.folder.model.Folder;
 import com.logmate.global.BaseEntity;
 import com.logmate.team.model.Team;
 import com.logmate.user.model.User;

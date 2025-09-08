@@ -1,4 +1,4 @@
-package com.logmate.folder;
+package com.logmate.folder.model;
 
 import com.logmate.dashboard.model.Dashboard;
 import com.logmate.global.BaseEntity;

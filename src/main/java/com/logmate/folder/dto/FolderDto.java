@@ -1,14 +1,13 @@
-package com.logmate.folder;
+package com.logmate.folder.dto;
 
+import com.logmate.folder.model.Folder;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 
 import java.time.format.DateTimeFormatter;
 
 @Getter
 @AllArgsConstructor
-@Builder
 public class FolderDto {
     private Long id;
     private String name;
