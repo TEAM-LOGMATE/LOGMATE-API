@@ -6,9 +6,13 @@ import com.logmate.dashboard.dto.DashboardRequest;
 import com.logmate.dashboard.dto.DashboardDto;
 import com.logmate.dashboard.model.Dashboard;
 import com.logmate.dashboard.repository.DashboardRepository;
+import com.logmate.folder.model.Folder;
+import com.logmate.folder.repository.FolderRepository;
+import com.logmate.global.CustomException;
 import com.logmate.team.model.Team;
 import com.logmate.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,28 +25,33 @@ import java.util.UUID;
 public class DashboardService {
     private final DashboardRepository dashboardRepository;
     private final TeamRepository teamRepository;
+    private final FolderRepository folderRepository;
     private final AgentConfigService agentConfigService;
 
-    public List<DashboardDto> getDashboardsByTeam(Long teamId) {
-        return dashboardRepository.findByTeamId(teamId).stream()
+    public List<DashboardDto> getDashboardsByFolder(Long folderId) {
+        return dashboardRepository.findByFolderId(folderId).stream()
                 .map(DashboardDto::from)
                 .toList();
     }
 
-    public DashboardDto createDashboard(Long teamId, DashboardRequest request) {
-        Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("팀을 찾을 수 없습니다."));
+    public DashboardDto createDashboard(Long folderId, DashboardRequest request) {
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 폴더입니다."));
 
         Dashboard dashboard = Dashboard.builder()
                 .name(request.getName())
                 .logPath(request.getLogPath())
                 .sendUrl(request.getSendTo())
-                .team(team)
+                .folder(folder)
+                .team(folder.getTeam()) // 팀 폴더인 경우
+                .user(folder.getUser()) // 개인 폴더인 경우
                 .build();
 
-        //dashboardRepository.save(dashboard);
-        ConfigDTO configDTO = makeConfigFromDashboard(dashboard, team);
-        agentConfigService.saveConfig(configDTO);
+        dashboardRepository.save(dashboard);
+
+        //TODO 팀-폴더 관계 명확히 수정한 후에 이부분 수정
+        //ConfigDTO configDTO = makeConfigFromDashboard(dashboard, team);
+        //agentConfigService.saveConfig(configDTO);
 
         return DashboardDto.from(dashboard);
     }
