@@ -70,6 +70,10 @@ public class FolderService {
             throw new CustomException(HttpStatus.BAD_REQUEST, "삭제된 폴더는 수정할 수 없습니다.");
         }
 
+        if (folder.getTeam() != null) {
+            throw new CustomException(HttpStatus.BAD_REQUEST, "개인 폴더인 경우만 직접 수정 가능합니다. 팀 폴더 이름은 팀 수정 api를 통해 수정하세요.");
+        }
+
         folder.setName(name);
         return FolderDto.from(folderRepository.save(folder));
     }
@@ -81,6 +85,10 @@ public class FolderService {
 
         if (folder.getStatus() == BaseStatus.N) {
             throw new CustomException(HttpStatus.BAD_REQUEST, "이미 삭제된 폴더입니다.");
+        }
+
+        if (folder.getTeam() != null) {
+            throw new CustomException(HttpStatus.BAD_REQUEST, "팀 기본 폴더는 직접 삭제할 수 없습니다. 팀 삭제 시 함께 처리됩니다.");
         }
 
         folder.setStatus(BaseStatus.N);
