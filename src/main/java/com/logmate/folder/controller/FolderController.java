@@ -24,14 +24,14 @@ public class FolderController {
     }
 
     // 팀 폴더 생성
-    @PostMapping("/teams/{teamId}")
+   /* @PostMapping("/teams/{teamId}")
     public ResponseEntity<BaseResponse<FolderDto>> createTeamFolder(
             @PathVariable Long teamId,
             @RequestBody FolderRequest request) {
         FolderDto folder = folderService.createTeamFolder(teamId, request.getName());
         return ResponseEntity.ok(BaseResponse.of(200, "팀 폴더 생성 성공", folder));
     }
-
+*/
 
     // 개인 폴더 전체 조회
     @GetMapping("/personal/{userId}")

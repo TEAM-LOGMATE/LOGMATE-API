@@ -32,5 +32,6 @@ public class Folder extends BaseEntity {
     private User user; //개인 폴더
 
     @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Dashboard> dashboards = new ArrayList<>();
 }

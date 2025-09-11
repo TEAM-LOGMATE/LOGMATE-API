@@ -1,6 +1,7 @@
 package com.logmate.team.model;
 
 import com.logmate.dashboard.model.Dashboard;
+import com.logmate.global.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Team {
+public class Team extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
