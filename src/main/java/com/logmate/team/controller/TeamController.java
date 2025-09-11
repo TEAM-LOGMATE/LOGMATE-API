@@ -62,12 +62,12 @@ public class TeamController {
         );
     }
 
-    @PutMapping("/{teamId}/members/role")
+    /*@PutMapping("/{teamId}/members/role")
     public ResponseEntity<Void> updateMemberRole(@PathVariable Long teamId,
                                                  @RequestBody UpdateTeamMemberRoleRequest request) {
         teamService.updateTeamMemberRole(teamId, request);
         return ResponseEntity.ok().build();
-    }
+    }*/
 
     @GetMapping("/{teamId}/invite")
     public ResponseEntity<String> getInviteUrl(@PathVariable Long teamId) {

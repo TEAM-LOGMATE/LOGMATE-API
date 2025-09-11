@@ -104,7 +104,19 @@ public class TeamService {
 
         if (request.getMembers() != null) {
             for (var memberReq : request.getMembers()) {
-                TeamMember member = teamMemberRepository.findByUserIdAndTeamId(memberReq.getUserId(), teamId)
+                User user = null;
+
+                if (memberReq.getEmail() != null) {
+                    user = userRepository.findByEmail(memberReq.getEmail())
+                            .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "해당 이메일 사용자를 찾을 수 없습니다."));
+                } else if (memberReq.getUserId() != null) {
+                    user = userRepository.findById(memberReq.getUserId())
+                            .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "해당 사용자를 찾을 수 없습니다."));
+                }
+
+                if (user == null) continue;
+
+                TeamMember member = teamMemberRepository.findByUserIdAndTeamId(user.getId(), teamId)
                         .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "요청 유저가 해당 팀의 멤버가 아닙니다."));
 
                 // 삭제 요청
@@ -131,8 +143,9 @@ public class TeamService {
         }
 
         Team updated = teamRepository.save(team);
-        return new TeamDto(updated, null);
+        return new TeamDto(updated, teamFolder.getId());
     }
+/*
     public void updateTeamMemberRole(Long teamId, UpdateTeamMemberRoleRequest request) {
         TeamMember member = teamMemberRepository.findByUserIdAndTeamId(request.getUserId(), teamId)
                 .orElseThrow(() -> new RuntimeException("팀 멤버 없음"));
@@ -140,6 +153,7 @@ public class TeamService {
         member.setRole(request.getRole());
         teamMemberRepository.save(member);
     }
+*/
 
     @Transactional
     public void deleteTeam(Long teamId, User requester) {

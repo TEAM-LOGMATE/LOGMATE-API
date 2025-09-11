@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 public class UpdateTeamMemberRoleRequest {
     private Long userId;
+    private String email;
     private MemberRole role;
     private boolean remove;
 }
