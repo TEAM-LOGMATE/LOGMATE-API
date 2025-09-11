@@ -54,10 +54,15 @@ public class TeamService {
 
         if (request.getMembers() != null) {
             for (var memberReq : request.getMembers()) {
-                if (!memberReq.getUserId().equals(creator.getId())) {
-                    User user = userRepository.findById(memberReq.getUserId())
+                User user = null;
+                if(memberReq.getEmail() != null){
+                    user = userRepository.findByEmail(memberReq.getEmail())
+                            .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "해당 이메일 사용자를 찾을 수 없습니다."));
+                } else if (memberReq.getUserId() != null) {
+                    user = userRepository.findById(memberReq.getUserId())
                             .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
-
+                }
+                if (user != null && !user.getId().equals(creator.getId())) {
                     MemberRole role = (memberReq.getRole() == null) ? MemberRole.MEMBER : memberReq.getRole();
                     members.add(new TeamMember(team, user, role));
                 }
