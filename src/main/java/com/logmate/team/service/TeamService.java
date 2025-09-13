@@ -38,15 +38,15 @@ public class TeamService {
     public List<TeamDto> getTeamsByUser(User user) {
         List<TeamMember> memberships = teamMemberRepository.findByUser(user);
         return memberships.stream()
-                .map(TeamMember::getTeam)
-                .filter(team -> team.getStatus() == BaseStatus.Y)
+                //.map(TeamMember::getTeam)
+                .filter(team -> team.getTeam().getStatus() == BaseStatus.Y)
                 .map(team -> {
-                    Long folderId = folderRepository.findByTeamIdAndStatus(team.getId(), BaseStatus.Y)
+                    Long folderId = folderRepository.findByTeamIdAndStatus(team.getTeam().getId(), BaseStatus.Y)
                             .stream()
                             .findFirst()
                             .map(Folder::getId)
                             .orElse(null);
-                    return new TeamDto(team, folderId);
+                    return new TeamDto(team.getTeam(), folderId, team.getRole().name());
                 })
                 .collect(Collectors.toList());
     }
@@ -80,8 +80,8 @@ public class TeamService {
 
         Team savedTeam = teamRepository.save(team); // 팀 저장
 
-        Long teamFolderId = folderService.createTeamFolder(savedTeam.getId(), "기본 폴더").getId(); // 자동으로 팀 폴더 생성
-        return new TeamDto(savedTeam, teamFolderId);
+        Long teamFolderId = folderService.createTeamFolder(savedTeam.getId(), savedTeam.getName()).getId(); // 자동으로 팀 폴더 생성
+        return new TeamDto(savedTeam, teamFolderId, MemberRole.ADMIN.name());
     }
     public String generateInviteUrl(Long teamId) {
         String code = UUID.randomUUID().toString();
@@ -150,7 +150,7 @@ public class TeamService {
         }
 
         Team updated = teamRepository.save(team);
-        return new TeamDto(updated, teamFolder.getId());
+        return new TeamDto(updated, teamFolder.getId(), requesterMember.getRole().name());
     }
 /*
     public void updateTeamMemberRole(Long teamId, UpdateTeamMemberRoleRequest request) {

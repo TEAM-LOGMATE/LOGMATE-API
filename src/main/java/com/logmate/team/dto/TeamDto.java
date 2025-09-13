@@ -8,10 +8,12 @@ public class TeamDto {
     private long id;
     private String name;
     private Long teamFolderId; //팀 생성시 팀폴더 기본 생성
+    private String myRole;
 
-    public TeamDto(Team team, Long teamFolderId) {
+    public TeamDto(Team team, Long teamFolderId, String myRole) {
         this.id = team.getId();
         this.name = team.getName();
         this.teamFolderId = teamFolderId;
+        this.myRole = myRole;
     }
 }
