@@ -40,7 +40,14 @@ public class TeamService {
         return memberships.stream()
                 .map(TeamMember::getTeam)
                 .filter(team -> team.getStatus() == BaseStatus.Y)
-                .map(team -> new TeamDto(team, null))
+                .map(team -> {
+                    Long folderId = folderRepository.findByTeamIdAndStatus(team.getId(), BaseStatus.Y)
+                            .stream()
+                            .findFirst()
+                            .map(Folder::getId)
+                            .orElse(null);
+                    return new TeamDto(team, folderId);
+                })
                 .collect(Collectors.toList());
     }
 
