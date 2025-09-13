@@ -14,6 +14,7 @@ public class DashboardDto {
     private String logPath;
     private String sendTo;
     private String lastModified;
+    private Long folderId;
 
     public static DashboardDto from(Dashboard dashboard) {
         return new DashboardDto(
@@ -23,7 +24,8 @@ public class DashboardDto {
                 dashboard.getSendUrl(),
                 dashboard.getUpdatedAt() != null
                         ? dashboard.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-                        : null
+                        : null,
+                dashboard.getFolder().getId()
         );
     }
 }
