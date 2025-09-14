@@ -5,10 +5,7 @@ import com.logmate.folder.repository.FolderRepository;
 import com.logmate.folder.service.FolderService;
 import com.logmate.global.BaseStatus;
 import com.logmate.global.CustomException;
-import com.logmate.team.dto.CreateTeamRequest;
-import com.logmate.team.dto.TeamDto;
-import com.logmate.team.dto.UpdateTeamMemberRoleRequest;
-import com.logmate.team.dto.UpdateTeamRequest;
+import com.logmate.team.dto.*;
 import com.logmate.team.model.MemberRole;
 import com.logmate.team.model.Team;
 import com.logmate.team.model.TeamMember;
@@ -108,59 +105,34 @@ public class TeamService {
                 .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "팀 멤버가 아닙니다."));
 
         boolean isAdmin = requesterMember.getRole() == MemberRole.ADMIN;
+        if (!isAdmin) {
+            throw new CustomException(HttpStatus.FORBIDDEN, "관리자만 팀을 수정할 수 있습니다.");
+        }
 
-        if (request.getMembers() != null) {
-            for (var memberReq : request.getMembers()) {
-                User user = null;
+        List<String> requestEmails = request.getMembers().stream()
+                .map(UpdateTeamMemberRoleRequest::getEmail)
+                .toList();
 
-                if (memberReq.getEmail() != null) {
-                    user = userRepository.findByEmail(memberReq.getEmail())
-                            .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "해당 이메일 사용자를 찾을 수 없습니다."));
-                } else if (memberReq.getUserId() != null) {
-                    user = userRepository.findById(memberReq.getUserId())
-                            .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "해당 사용자를 찾을 수 없습니다."));
-                }
+        team.getMembers().removeIf(m -> !requestEmails.contains(m.getUser().getEmail()));
 
-                if (user == null) continue;
+        for (var memberReq : request.getMembers()) {
+            User user = userRepository.findByEmail(memberReq.getEmail())
+                    .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "해당 이메일 사용자를 찾을 수 없습니다."));
 
-                TeamMember member = teamMemberRepository.findByUserIdAndTeamId(user.getId(), teamId)
-                        .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "요청 유저가 해당 팀의 멤버가 아닙니다."));
+            TeamMember member = teamMemberRepository.findByUserIdAndTeamId(user.getId(), teamId).orElse(null);
 
-                // 삭제 요청
-                if (memberReq.isRemove()) {
-                    boolean isSelf = member.getUser().getId().equals(requester.getId());
-
-                    if(isSelf){
-                        if(isAdmin){throw new CustomException(HttpStatus.BAD_REQUEST,"관리자는 자기 자신을 삭제할 수 없습니다.");}
-                        teamMemberRepository.delete(member);
-                    }else {
-                        if (!isAdmin) {throw new CustomException(HttpStatus.BAD_REQUEST,"관리자만 다른 멤버를 삭제할 수 있습니다.");}
-                        teamMemberRepository.delete(member);
-                    }
-                    continue;
-                }
-
-                // 역할 변경 요청
-                if (memberReq.getRole() != null) {
-                    if (!isAdmin) {throw new CustomException(HttpStatus.BAD_REQUEST,"관리자만 역할을 변경할 수 있습니다.");}
-                    member.setRole(memberReq.getRole());
-                    teamMemberRepository.save(member);
-                }
+            if (member == null) {
+                // 신규 멤버 추가
+                MemberRole role = (memberReq.getRole() == null) ? MemberRole.MEMBER : memberReq.getRole();
+                team.getMembers().add(new TeamMember(team, user, role));
+            } else {
+                member.setRole(memberReq.getRole()); //역할 업데이트
             }
         }
 
         Team updated = teamRepository.save(team);
         return new TeamDto(updated, teamFolder.getId(), requesterMember.getRole().name());
     }
-/*
-    public void updateTeamMemberRole(Long teamId, UpdateTeamMemberRoleRequest request) {
-        TeamMember member = teamMemberRepository.findByUserIdAndTeamId(request.getUserId(), teamId)
-                .orElseThrow(() -> new RuntimeException("팀 멤버 없음"));
-
-        member.setRole(request.getRole());
-        teamMemberRepository.save(member);
-    }
-*/
 
     @Transactional
     public void deleteTeam(Long teamId, User requester) {
@@ -189,6 +161,30 @@ public class TeamService {
         team.getMembers().forEach(member -> {
             teamMemberRepository.delete(member);
         });
+    }
+
+    public TeamDetailDto getTeamDetail(Long teamId, User requester) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "존재하지 않는 팀입니다."));
+
+        Folder teamFolder = folderRepository.findByTeamIdAndStatus(teamId, BaseStatus.Y)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "팀 폴더가 존재하지 않습니다."));
+
+        List<TeamMember> members = teamMemberRepository.findByUserIdAndTeamId(requester.getId(), teamId)
+                .map(m -> team.getMembers()) // 팀 멤버 전체 가져오기
+                .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "팀 멤버가 아닙니다."));
+
+        List<TeamMemberDto> memberDtos = members.stream()
+                .map(m -> new TeamMemberDto(
+                        m.getUser().getName(),
+                        m.getUser().getEmail(),
+                        m.getRole()
+                ))
+                .toList();
+
+        return new TeamDetailDto(team, teamFolder.getId(), memberDtos);
     }
 
 }
