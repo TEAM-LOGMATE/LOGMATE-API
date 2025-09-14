@@ -4,6 +4,7 @@ import com.logmate.auth.dto.LoginRequest;
 import com.logmate.auth.dto.LoginResponse;
 import com.logmate.auth.util.JwtUtil;
 import com.logmate.auth.util.TokenBlacklist;
+import com.logmate.global.BaseResponse;
 import com.logmate.user.dto.UpdateUserRequest;
 import com.logmate.user.service.UserService;
 import com.logmate.user.model.User;
@@ -53,11 +54,21 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PatchMapping("/mypage")
+    @PutMapping("/mypage")
     public ResponseEntity<?> updateMyProfile(@RequestBody UpdateUserRequest request, HttpServletRequest httpRequest) {
         String currentEmail = jwtUtil.extractEmailFromRequest(httpRequest);
-        userService.updateUser(currentEmail, request);
-        return ResponseEntity.ok("수정 완료");
+        LoginResponse updatedUser = userService.updateUser(currentEmail, request);
+        return ResponseEntity.ok(BaseResponse.of(200,"내 정보 수정 완료", updatedUser));
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<?> checkEmail(@RequestParam String email) {
+        boolean available = !userService.isAvailableEmail(email);
+        if (available) {
+            return ResponseEntity.ok("사용 가능한 이메일입니다.");
+        } else {
+            return ResponseEntity.badRequest().body("이미 사용 중인 이메일입니다.");
+        }
     }
 
     //TODO soft delete 실행 유무 협의

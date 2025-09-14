@@ -2,11 +2,13 @@ package com.logmate.user.service;
 
 import com.logmate.auth.dto.LoginResponse;
 import com.logmate.auth.util.JwtUtil;
+import com.logmate.global.CustomException;
 import com.logmate.user.dto.UpdateUserRequest;
 import com.logmate.user.model.User;
 import com.logmate.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -66,24 +68,38 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(String currentEmail, UpdateUserRequest updateUserRequest) {
+    public LoginResponse updateUser(String currentEmail, UpdateUserRequest updateUserRequest) {
         User user = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-        if (updateUserRequest.getEmail() != null && !updateUserRequest.getEmail().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(updateUserRequest.getEmail())) {
-                throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
-            }
-            user.setEmail(updateUserRequest.getEmail());
+        // 현재 비밀번호 검증
+        if (!passwordEncoder.matches(updateUserRequest.getCurrentPassword(), user.getPassword())) {
+            throw new CustomException(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.");
         }
 
-        if (updateUserRequest.getPassword() != null) {
+        if (updateUserRequest.getNewEmail() != null && !updateUserRequest.getNewEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(updateUserRequest.getNewEmail())) {
+                throw new CustomException(HttpStatus.BAD_REQUEST, "이미 사용중인 이메일입니다.");
+            }
+            user.setEmail(updateUserRequest.getNewEmail());
+        }
+
+        if (updateUserRequest.getNewPassword() != null) {
             //비밀번호 유효성 검증
-            validatePassword(updateUserRequest.getPassword(), user.getEmail());
-            user.setPassword(passwordEncoder.encode(updateUserRequest.getPassword()));
+            validatePassword(updateUserRequest.getNewPassword(), user.getEmail());
+            user.setPassword(passwordEncoder.encode(updateUserRequest.getNewPassword()));
         }
 
         userRepository.save(user);
+
+        return new LoginResponse(
+                jwtUtil.generateToken(user.getEmail()),
+                user.getId(),
+                user.getEmail(),
+                user.getName()
+        );
+    }
+    public boolean isAvailableEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 
     @Transactional
