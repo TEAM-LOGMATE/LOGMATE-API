@@ -12,7 +12,6 @@ public class DashboardDto {
     private Long id;
     private String name;
     private String logPath;
-    private String sendTo;
     private String lastModified;
     private Long folderId;
 
@@ -21,7 +20,6 @@ public class DashboardDto {
                 dashboard.getId(),
                 dashboard.getName(),
                 dashboard.getLogPath(),
-                dashboard.getSendUrl(),
                 dashboard.getUpdatedAt() != null
                         ? dashboard.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
                         : null,

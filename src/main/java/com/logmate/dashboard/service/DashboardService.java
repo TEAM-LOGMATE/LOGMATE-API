@@ -51,7 +51,6 @@ public class DashboardService {
         Dashboard dashboard = Dashboard.builder()
                 .name(request.getName())
                 .logPath(request.getLogPath())
-                .sendUrl(request.getSendTo())
                 .folder(folder)
                 .team(folder.getTeam()) // 팀 폴더인 경우
                 .user(folder.getUser()) // 개인 폴더인 경우
@@ -78,7 +77,6 @@ public class DashboardService {
 
         dashboard.setName(request.getName());
         dashboard.setLogPath(request.getLogPath());
-        dashboard.setSendUrl(request.getSendTo());
 
         dashboardRepository.save(dashboard);
 

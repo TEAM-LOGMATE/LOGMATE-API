@@ -21,7 +21,6 @@ public class Dashboard extends BaseEntity {
 
     private String name;
     private String logPath;
-    private String sendUrl;
 
     @ManyToOne
     @JoinColumn(name = "team_id")
