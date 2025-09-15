@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "agent_configurations")
@@ -15,7 +16,7 @@ public class AgentConfiguration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, updatable = false)
     private String agentId;
 
     @Column(nullable = false)
@@ -26,6 +27,21 @@ public class AgentConfiguration {
     private String configJson; //ConfigDTO 전체를 JSON으로 저장
 
     private LocalDateTime createdAt;
+
+    @PrePersist //생성 시 자동으로 시간 기록
+    public void onCreate() {
+        this.createdAt = LocalDateTime.now();
+
+        if (this.agentId == null) {
+            this.agentId = UUID.randomUUID().toString(); //UUID 자동 생성
+        }
+    }
+
+    public void update(String newEtag, String newConfigJson) {
+        this.etag = newEtag;
+        this.configJson = newConfigJson;
+    }
+
 
     public AgentConfiguration(String agentId, String etag, String configJson) {
         this.agentId = agentId;

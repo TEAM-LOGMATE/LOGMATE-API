@@ -155,7 +155,8 @@ public class DashboardService {
         exporter.setMaxRetryCount(3);
         watcher.setExporter(exporter);
 
-        ParserDetailConfig parserDetail = new ParserDetailConfig("yyyy-MM-dd HH:mm:ss", "Asia/Seoul");
+        ParserConfig.ParserDetailConfig parserDetail =
+                new ParserConfig.ParserDetailConfig("yyyy-MM-dd HH:mm:ss", "Asia/Seoul");
         ParserConfig parser = new ParserConfig();
         parser.setType("springboot");
         parser.setConfig(parserDetail);
