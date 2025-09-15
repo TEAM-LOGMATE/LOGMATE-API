@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logmate.agentConfig.dto.*;
 import com.logmate.agentConfig.repository.AgentConfigurationRepository;
-import com.logmate.agentConfig.dto.ConfigDTO;
 import com.logmate.agentConfig.model.AgentConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ public class AgentConfigService {
 
     public String  saveConfig(SaveDashboardConfigRequest request) {
         try {
-            String json = objectMapper.writeValueAsString(configDTO);
             String etag = UUID.randomUUID().toString(); // 새로운 etag 생성
             String agentId = UUID.randomUUID().toString();
 
@@ -95,5 +93,20 @@ public class AgentConfigService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Config 저장 실패", e);
         }
+    }
+
+    public ConfigDTO getConfig(String agentId, String etag) {
+        return repository.findByAgentId(agentId)
+                .map(config -> {
+                    if (config.getEtag().equals(etag)) {
+                        return null; // 변경 없음
+                    }
+                    try {
+                        return objectMapper.readValue(config.getConfigJson(), ConfigDTO.class);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Config 파싱 실패", e);
+                    }
+                })
+                .orElse(null); // agentId 설정 없음
     }
 }
