@@ -24,44 +24,50 @@ public class AgentConfigService {
             String etag = UUID.randomUUID().toString(); // 새로운 etag 생성
             String agentId = UUID.randomUUID().toString();
 
+            //PullerConfig
             PullerConfig pullerConfig = new PullerConfig();
-            pullerConfig.setPullURL("https://api.logmate.io/api/agents/config"); // 서버 고정값
-            pullerConfig.setIntervalSec(request.getPuller().getIntervalSec());
+            pullerConfig.setPullURL(null); // 서버 고정값 = null
+            pullerConfig.setIntervalSec(request.getPuller() != null ? request.getPuller().getIntervalSec() : 0);
             pullerConfig.setEtag(etag);
 
-            // WatcherConfig 구성
+            //WatcherConfig
             WatcherConfig watcherConfig = new WatcherConfig();
             watcherConfig.setEtag(etag);
             watcherConfig.setThNum(1);
 
+            //TailerConfig
             TailerConfig tailer = new TailerConfig();
-            tailer.setReadIntervalMs(request.getTailer().getReadIntervalMs());
-            tailer.setMetaDataFilePathPrefix(request.getTailer().getMetaDataFilePathPrefix());
-            tailer.setFilePath("/var/log/app.log"); // 서버에서 기본 제공
+            tailer.setReadIntervalMs(request.getTailer() != null ? request.getTailer().getReadIntervalMs() : 0);
+            tailer.setMetaDataFilePathPrefix(request.getTailer() != null? request.getTailer().getMetaDataFilePathPrefix() : null);
+            tailer.setFilePath(null); // 서버 고정값 = null
             watcherConfig.setTailer(tailer);
 
+            //MultilineConfig
             MultilineConfig multiline = new MultilineConfig();
-            multiline.setEnabled(request.getMultiline().isEnabled());
-            multiline.setMaxLines(request.getMultiline().getMaxLines());
+            multiline.setEnabled(request.getMultiline() != null && request.getMultiline().isEnabled());
+            multiline.setMaxLines(request.getMultiline() != null ? request.getMultiline().getMaxLines() : 0);
             watcherConfig.setMultiline(multiline);
 
+            //ExporterConfig
             ExporterConfig exporter = new ExporterConfig();
-            exporter.setPushURL("https://stream.logmate.io/ingest"); // 서버에서 제공
-            exporter.setCompressEnabled(request.getExporter().getCompressEnabled());
-            exporter.setRetryIntervalSec(request.getExporter().getRetryIntervalSec());
-            exporter.setMaxRetryCount(request.getExporter().getMaxRetryCount());
+            exporter.setPushURL(null);  // 서버에서 제공
+            exporter.setCompressEnabled(request.getExporter() != null ? request.getExporter().getCompressEnabled() : null);
+            exporter.setRetryIntervalSec(request.getExporter() != null ? request.getExporter().getRetryIntervalSec() : 0);
+            exporter.setMaxRetryCount(request.getExporter() != null ? request.getExporter().getMaxRetryCount() : 0);
             watcherConfig.setExporter(exporter);
 
+            //ParserConfig
             ParserConfig parser = new ParserConfig();
-            parser.setType("springboot"); // 서버에서 기본 제공
-            parser.setConfig(new ParserConfig.ParserDetailConfig("yyyy-MM-dd HH:mm:ss", "Asia/Seoul"));
+            parser.setType(null); // 서버 고정값 = null
+            parser.setConfig(null); // 서버 고정값 = null
             watcherConfig.setParser(parser);
 
+            //FilterConfig
             FilterConfig filter = new FilterConfig();
-            filter.setAllowedLevels(Set.copyOf(request.getFilter().getAllowedLevels()));
-            filter.setRequiredKeywords(Set.copyOf(request.getFilter().getRequiredKeywords()));
-            filter.setAfter(request.getFilter().getAfter());
-            filter.setAllowedLoggers(Set.of()); // 화면에는 없음 → 빈 값
+            filter.setAllowedLevels(request.getFilter() != null ? Set.copyOf(request.getFilter().getAllowedLevels()) : null);
+            filter.setRequiredKeywords(request.getFilter() != null ? Set.copyOf(request.getFilter().getRequiredKeywords()) : null);
+            filter.setAfter(request.getFilter() != null ? request.getFilter().getAfter() : null);
+            filter.setAllowedLoggers(null); // 화면에는 없음 → 빈 값
             watcherConfig.setFilter(filter);
 
             // 최종 ConfigDTO
@@ -70,7 +76,7 @@ public class AgentConfigService {
 
             AgentConfig agentConfig = new AgentConfig();
             agentConfig.setAgentId(agentId);
-            agentConfig.setAccessToken("generated-access-token"); // 서버 발급
+            agentConfig.setAccessToken(null); // 서버 고정값 = null
             agentConfig.setEtag(etag);
             configDTO.setAgentConfig(agentConfig);
 
