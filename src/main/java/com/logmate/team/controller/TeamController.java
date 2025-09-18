@@ -2,15 +2,14 @@ package com.logmate.team.controller;
 
 
 import com.logmate.global.BaseResponse;
-import com.logmate.team.dto.UpdateTeamMemberRoleRequest;
-import com.logmate.team.dto.UpdateTeamRequest;
+import com.logmate.global.CustomException;
+import com.logmate.team.dto.*;
 import com.logmate.team.service.TeamService;
-import com.logmate.team.dto.CreateTeamRequest;
-import com.logmate.team.dto.TeamDto;
 import com.logmate.user.model.User;
 import com.logmate.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,16 +59,38 @@ public class TeamController {
         );
     }
 
-    @PutMapping("/{teamId}/members/role")
+    /*@PutMapping("/{teamId}/members/role")
     public ResponseEntity<Void> updateMemberRole(@PathVariable Long teamId,
                                                  @RequestBody UpdateTeamMemberRoleRequest request) {
         teamService.updateTeamMemberRole(teamId, request);
         return ResponseEntity.ok().build();
-    }
+    }*/
 
     @GetMapping("/{teamId}/invite")
     public ResponseEntity<String> getInviteUrl(@PathVariable Long teamId) {
         String url = teamService.generateInviteUrl(teamId);
         return ResponseEntity.ok(url);
     }
+
+    @DeleteMapping("/{teamId}")
+    public ResponseEntity<BaseResponse<Void>> deleteTeam(@PathVariable Long teamId,
+                                                         HttpServletRequest httpRequest) {
+        String email = (String) httpRequest.getAttribute("email");
+        User requester = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        teamService.deleteTeam(teamId, requester);
+        return ResponseEntity.ok(BaseResponse.of(200, "팀 삭제 성공", null));
+    }
+    @GetMapping("/{teamId}")
+    public ResponseEntity<BaseResponse<TeamDetailDto>> getTeamDetail(@PathVariable Long teamId,
+                                                                     HttpServletRequest httpRequest) {
+        String email = (String) httpRequest.getAttribute("email");
+        User requester = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        TeamDetailDto detail = teamService.getTeamDetail(teamId, requester);
+        return ResponseEntity.ok(BaseResponse.of(200, "팀 상세 조회 성공", detail));
+    }
+
 }

@@ -7,5 +7,4 @@ import lombok.Getter;
 public class DashboardRequest {
     private String name;
     private String logPath;
-    private String sendTo;
 }

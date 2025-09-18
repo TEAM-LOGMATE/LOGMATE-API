@@ -1,7 +1,9 @@
-package com.logmate.team.model;
+package com.logmate.folder.model;
 
 import com.logmate.dashboard.model.Dashboard;
 import com.logmate.global.BaseEntity;
+import com.logmate.team.model.Team;
+import com.logmate.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,21 +16,22 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Team extends BaseEntity {
+public class Folder extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
 
-    private String description;
+    @ManyToOne
+    @JoinColumn(name = "team_id")
+    private Team team; //팀 폴더
 
-    // 팀 <-> 멤버 : teamMember 통해 연결
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL,  orphanRemoval = true)
-    @Builder.Default
-    private List<TeamMember> members = new ArrayList<>();
-    // 팀 <-> 대시보드 : 1:N
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user; //개인 폴더
+
+    @OneToMany(mappedBy = "folder", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Dashboard> dashboards = new ArrayList<>();
 }

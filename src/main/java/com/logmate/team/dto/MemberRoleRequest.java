@@ -6,5 +6,6 @@ import lombok.Getter;
 @Getter
 public class MemberRoleRequest {
     private Long userId;
+    private String email;
     private MemberRole role; // admin, member, viewer
 }

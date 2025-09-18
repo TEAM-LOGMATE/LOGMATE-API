@@ -3,6 +3,7 @@ package com.logmate.config;
 import com.logmate.auth.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,9 +31,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
         http
+                .cors(Customizer.withDefaults()) // CORS 활성화
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (API 서버)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**").permitAll() // 회원가입/로그인 허용
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/**").permitAll()
                         .anyRequest().authenticated()                   // 전체 허용
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
