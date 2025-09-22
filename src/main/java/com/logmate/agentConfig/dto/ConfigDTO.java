@@ -8,5 +8,5 @@ public class ConfigDTO {
     private String etag;
     private AgentConfig agentConfig;
     private PullerConfig pullerConfig;
-    private List<WatcherConfig> watcherConfigs;
+    private List<WatcherConfig> logPipelineConfigs;
 }
