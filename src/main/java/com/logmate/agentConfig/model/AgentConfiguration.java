@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -16,6 +18,9 @@ public class AgentConfiguration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
+    private LocalDateTime lastUpdatedAt;
+
     @Column(nullable = false, unique = true, updatable = false)
     private String agentId;
 
@@ -24,13 +29,19 @@ public class AgentConfiguration {
 
     @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String configJson; //ConfigDTO 전체를 JSON으로 저장
+    private String configJson; //pullerConfig, agentConfig 객체용 JSON
 
     private LocalDateTime createdAt;
+
+    // logPipelineConfigs 관계 설정
+    @OneToMany(mappedBy = "agentConfiguration", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<LogPipelineConfig> logPipelineConfigs = new ArrayList<>();
 
     @PrePersist //생성 시 자동으로 시간 기록
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.lastUpdatedAt = this.createdAt;
+
 
         if (this.agentId == null) {
             this.agentId = UUID.randomUUID().toString(); //UUID 자동 생성
@@ -40,6 +51,7 @@ public class AgentConfiguration {
     public void update(String newEtag, String newConfigJson) {
         this.etag = newEtag;
         this.configJson = newConfigJson;
+        this.lastUpdatedAt = LocalDateTime.now();
     }
 
 
