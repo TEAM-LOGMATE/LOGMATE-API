@@ -23,13 +23,16 @@ public class AgentConfigController {
     private final UserRepository userRepository;
 
     @PostMapping("/folders/{folderId}/dashboards/{dashboardId}/config")
-    public ResponseEntity<BaseResponse<Map<String, String>>> saveConfig(@PathVariable Long folderId,
+    public ResponseEntity<BaseResponse<Map<String, Object>>> saveConfig(@PathVariable Long folderId,
                                                          @PathVariable Long dashboardId,
                                                          @RequestBody SaveDashboardConfigRequest request,
                                                          HttpServletRequest httpRequest) {
         String agentId = service.saveConfig(request);
 
-        Map<String, String> response = Map.of("agentId", agentId);
+        Map<String, Object> response = Map.of(
+                "agentId", agentId,
+                "logpipelineConfigs", request.getLogPipelineConfigs()
+                );
         return ResponseEntity.ok(BaseResponse.of(200, "대시보드 고급설정 저장 성공", response));
     }
 
@@ -71,7 +74,8 @@ public class AgentConfigController {
 
         Map<String, Object> response = Map.of(
                 "agentId", agentId,
-                "updatedFilePath", targetFilePath
+                "updatedFilePath", targetFilePath,
+                "logpipelineConfigs", watcherReq
         );
 
         return ResponseEntity.ok(BaseResponse.of(200, "LogPipeline 업데이트 성공", response));
