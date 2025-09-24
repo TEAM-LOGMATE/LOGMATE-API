@@ -192,4 +192,94 @@ public class AgentConfigService {
                 })
                 .orElse(null); // agentId 설정 없음
     }
+
+    @Transactional
+    public void updatePipeline(String agentId, String targetFilePath, SaveDashboardConfigRequest.WatcherRequest request) {
+        AgentConfiguration agentConfig = repository.findByAgentId(agentId)
+                .orElseThrow(() -> new RuntimeException("Agent not found"));
+
+        LogPipelineConfig pipeline = logPipelineRepository.findByAgentConfigurationAndFilePath(agentConfig, targetFilePath);
+        if (pipeline == null) {
+            throw new RuntimeException("Pipeline not found for filePath: " + targetFilePath);
+        }
+
+        try {
+            // 새로운 watcherConfig 객체 생성
+            WatcherConfig watcher = new WatcherConfig();
+            watcher.setEtag(UUID.randomUUID().toString());
+            watcher.setThNum(pipeline.getThNum()); // 기존 thNum 유지
+
+            // Tailer
+            TailerConfig tailer = new TailerConfig();
+            tailer.setFilePath(request.getTailer() != null ? request.getTailer().getFilePath() : null);
+            tailer.setReadIntervalMs(request.getTailer() != null ? request.getTailer().getReadIntervalMs() : 0);
+            tailer.setMetaDataFilePathPrefix(request.getTailer() != null ? request.getTailer().getMetaDataFilePathPrefix() : null);
+            watcher.setTailer(tailer);
+
+            // Multiline
+            MultilineConfig multiline = new MultilineConfig();
+            multiline.setEnabled(request.getMultiline() != null && request.getMultiline().isEnabled());
+            multiline.setMaxLines(request.getMultiline() != null ? request.getMultiline().getMaxLines() : 0);
+            watcher.setMultiline(multiline);
+
+            // Exporter
+            ExporterConfig exporter = new ExporterConfig();
+            exporter.setPushURL(null);
+            exporter.setCompressEnabled(request.getExporter() != null ? request.getExporter().getCompressEnabled() : null);
+            exporter.setRetryIntervalSec(request.getExporter() != null ? request.getExporter().getRetryIntervalSec() : 0);
+            exporter.setMaxRetryCount(request.getExporter() != null ? request.getExporter().getMaxRetryCount() : 0);
+            watcher.setExporter(exporter);
+
+            // Parser
+            ParserConfig parser = new ParserConfig();
+            parser.setType(request.getParserType());
+
+            if (request.getParser() != null) {
+                ParserConfig.ParserDetailConfig detail = new ParserConfig.ParserDetailConfig();
+                detail.setTimezone(request.getParser().getTimezone());
+                parser.setConfig(detail);
+            } else {
+                parser.setConfig(null);
+            }
+            watcher.setParser(parser);
+
+            // Filter
+            FilterConfig filter = new FilterConfig();
+            if ("tomcat".equalsIgnoreCase(request.getParserType())) {
+                filter.setAllowedMethods(request.getFilter() != null ? Set.copyOf(request.getFilter().getAllowedMethods()) : Set.of());
+            } else {
+                filter.setAllowedLevels(request.getFilter() != null ? Set.copyOf(request.getFilter().getAllowedLevels()) : Set.of());
+                filter.setRequiredKeywords(request.getFilter() != null ? Set.copyOf(request.getFilter().getRequiredKeywords()) : Set.of());
+            }
+            watcher.setFilter(filter);
+
+            // JSON 직렬화 후 엔티티 업데이트
+            String wcJson = objectMapper.writeValueAsString(watcher);
+            pipeline.update(watcher.getEtag(), tailer.getFilePath(), wcJson);
+
+            logPipelineRepository.save(pipeline);
+
+            ConfigDTO dto = objectMapper.readValue(agentConfig.getConfigJson(), ConfigDTO.class);
+            // 최신 pipeline 목록 가져오기
+            List<LogPipelineConfig> pipelines = logPipelineRepository.findByAgentConfiguration(agentConfig);
+            List<WatcherConfig> watchers = new ArrayList<>();
+            for (LogPipelineConfig p : pipelines) {
+                WatcherConfig wc = objectMapper.readValue(p.getConfigJson(), WatcherConfig.class);
+                watchers.add(wc);
+            }
+            dto.setLogPipelineConfigs(watchers);
+
+            // 전체 etag 갱신
+            String configEtag = UUID.randomUUID().toString();
+            dto.setEtag(configEtag);
+
+            // 다시 직렬화 후 agentConfig 갱신
+            String newJson = objectMapper.writeValueAsString(dto);
+            agentConfig.update(configEtag, newJson);
+            repository.save(agentConfig);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Pipeline update 실패", e);
+        }
+    }
 }
