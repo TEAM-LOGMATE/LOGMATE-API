@@ -161,11 +161,31 @@ public class AgentConfigService {
     public ConfigDTO getConfig(String agentId, String etag) {
         return repository.findByAgentId(agentId)
                 .map(config -> {
-                    if (config.getEtag().equals(etag)) {
+                    if (etag != null && !etag.isBlank() && config.getEtag().equals(etag)) {
                         return null; // 변경 없음
                     }
                     try {
-                        return objectMapper.readValue(config.getConfigJson(), ConfigDTO.class);
+                        ConfigDTO dto = objectMapper.readValue(config.getConfigJson(), ConfigDTO.class);
+
+                        // logPipelineConfig DB에 저장된 항목들 다시 조립
+                        List<LogPipelineConfig> pipelineEntities = logPipelineRepository.findByAgentConfiguration(config);
+                        List<WatcherConfig> watchers = new ArrayList<>();
+                        for (LogPipelineConfig p : pipelineEntities) {
+                            WatcherConfig wc = objectMapper.readValue(p.getConfigJson(), WatcherConfig.class);
+                            watchers.add(wc);
+                        }
+                        // intervalSec 계산
+                        if (config.getLastUpdatedAt() != null) {
+                            long seconds = Duration.between(config.getLastUpdatedAt(), LocalDateTime.now()).getSeconds();
+                            PullerConfig puller = dto.getPullerConfig();
+                            if (puller == null) {
+                                puller = new PullerConfig();
+                            }
+                            puller.setIntervalSec((int) seconds);
+                            puller.setEtag(UUID.randomUUID().toString());
+                            dto.setPullerConfig(puller);
+                        }
+                        return dto;
                     } catch (Exception e) {
                         throw new RuntimeException("Config 파싱 실패", e);
                     }
