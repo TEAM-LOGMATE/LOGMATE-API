@@ -3,97 +3,154 @@ package com.logmate.agentConfig.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logmate.agentConfig.dto.*;
-import com.logmate.agentConfig.repository.AgentConfigurationRepository;
 import com.logmate.agentConfig.model.AgentConfiguration;
+import com.logmate.agentConfig.model.LogPipelineConfig;
+import com.logmate.agentConfig.repository.AgentConfigurationRepository;
+import com.logmate.agentConfig.repository.LogPipelineConfigRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class AgentConfigService {
 
     private final AgentConfigurationRepository repository;
+    private final LogPipelineConfigRepository logPipelineRepository;
     private final ObjectMapper objectMapper;
 
-    public String  saveConfig(SaveDashboardConfigRequest request) {
+    public String saveConfig(SaveDashboardConfigRequest request) {
         try {
-            String etag = UUID.randomUUID().toString(); // 새로운 etag 생성
-            String agentId = UUID.randomUUID().toString();
+            //String etag = UUID.randomUUID().toString(); // 새로운 etag 생성
+            String configEtag = UUID.randomUUID().toString();
+
+            String agentId = request.getAgentId();
+            AgentConfiguration entity;
+
+            if (agentId == null || agentId.isBlank()) {
+                agentId = UUID.randomUUID().toString();
+                entity = new AgentConfiguration(agentId, configEtag, "{}");
+                repository.save(entity);
+            } else {
+                entity = repository.findByAgentId(agentId)
+                        .orElse(new AgentConfiguration(agentId, configEtag, "{}"));
+
+                repository.save(entity);
+            }
+            // AgentConfig
+            AgentConfig agentConfig = new AgentConfig();
+            agentConfig.setAgentId(agentId);
+            agentConfig.setAccessToken("generated-access-token");
+            agentConfig.setEtag(UUID.randomUUID().toString());
 
             //PullerConfig
             PullerConfig pullerConfig = new PullerConfig();
-            pullerConfig.setPullURL(null); // 서버 고정값 = null
-            pullerConfig.setIntervalSec(request.getPuller() != null ? request.getPuller().getIntervalSec() : 0);
-            pullerConfig.setEtag(etag);
+            pullerConfig.setPullURL("http://15.164.114.73/api/config"); // agnet pull 요청 URL
+            pullerConfig.setIntervalSec(0);
+            pullerConfig.setEtag(UUID.randomUUID().toString());
+
+            int currentCount = logPipelineRepository.findByAgentConfiguration(entity).size();
+            int thNum = currentCount + 1;
 
             //WatcherConfig
-            WatcherConfig watcherConfig = new WatcherConfig();
-            watcherConfig.setEtag(etag);
-            watcherConfig.setThNum(1);
+            List<WatcherConfig> watcherConfigs = new ArrayList<>();
+            for (SaveDashboardConfigRequest.WatcherRequest wReq : request.getLogPipelineConfigs()) {
+                WatcherConfig watcher = new WatcherConfig();
+                watcher.setEtag(UUID.randomUUID().toString());
+                watcher.setThNum(thNum++);
 
-            //TailerConfig
-            TailerConfig tailer = new TailerConfig();
-            tailer.setReadIntervalMs(request.getTailer() != null ? request.getTailer().getReadIntervalMs() : 0);
-            tailer.setMetaDataFilePathPrefix(request.getTailer() != null? request.getTailer().getMetaDataFilePathPrefix() : null);
-            tailer.setFilePath(null); // 서버 고정값 = null
-            watcherConfig.setTailer(tailer);
+                // Tailer
+                TailerConfig tailer = new TailerConfig();
+                tailer.setFilePath(wReq.getTailer() != null ? wReq.getTailer().getFilePath() : null);
+                tailer.setReadIntervalMs(wReq.getTailer() != null ? wReq.getTailer().getReadIntervalMs() : 0);
+                tailer.setMetaDataFilePathPrefix(wReq.getTailer() != null ? wReq.getTailer().getMetaDataFilePathPrefix() : null);
+                watcher.setTailer(tailer);
 
-            //MultilineConfig
-            MultilineConfig multiline = new MultilineConfig();
-            multiline.setEnabled(request.getMultiline() != null && request.getMultiline().isEnabled());
-            multiline.setMaxLines(request.getMultiline() != null ? request.getMultiline().getMaxLines() : 0);
-            watcherConfig.setMultiline(multiline);
+                // Multiline
+                MultilineConfig multiline = new MultilineConfig();
+                multiline.setEnabled(wReq.getMultiline() != null && wReq.getMultiline().isEnabled());
+                multiline.setMaxLines(wReq.getMultiline() != null ? wReq.getMultiline().getMaxLines() : 0);
+                watcher.setMultiline(multiline);
 
-            //ExporterConfig
-            ExporterConfig exporter = new ExporterConfig();
-            exporter.setPushURL(null);  // 서버에서 제공
-            exporter.setCompressEnabled(request.getExporter() != null ? request.getExporter().getCompressEnabled() : null);
-            exporter.setRetryIntervalSec(request.getExporter() != null ? request.getExporter().getRetryIntervalSec() : 0);
-            exporter.setMaxRetryCount(request.getExporter() != null ? request.getExporter().getMaxRetryCount() : 0);
-            watcherConfig.setExporter(exporter);
+                // Exporter
+                ExporterConfig exporter = new ExporterConfig();
+                String pushUrl = String.format(
+                        "http://ec2-3-39-232-72.ap-northeast-2.compute.amazonaws.com:8080/api/v1/streaming/logs/tomcat/%s/%d",
+                        agentId,
+                        watcher.getThNum()
+                );
+                exporter.setCompressEnabled(wReq.getExporter() != null ? wReq.getExporter().getCompressEnabled() : null);
+                exporter.setRetryIntervalSec(wReq.getExporter() != null ? wReq.getExporter().getRetryIntervalSec() : 0);
+                exporter.setMaxRetryCount(wReq.getExporter() != null ? wReq.getExporter().getMaxRetryCount() : 0);
+                watcher.setExporter(exporter);
 
-            //ParserConfig
-            ParserConfig parser = new ParserConfig();
-            parser.setType(null); // 서버 고정값 = null
-            parser.setConfig(null); // 서버 고정값 = null
-            watcherConfig.setParser(parser);
+                // Parser
+                ParserConfig parser = new ParserConfig();
+                parser.setType(wReq.getParserType());
 
-            //FilterConfig
-            FilterConfig filter = new FilterConfig();
-            filter.setAllowedLevels(request.getFilter() != null ? Set.copyOf(request.getFilter().getAllowedLevels()) : null);
-            filter.setRequiredKeywords(request.getFilter() != null ? Set.copyOf(request.getFilter().getRequiredKeywords()) : null);
-            filter.setAfter(request.getFilter() != null ? request.getFilter().getAfter() : null);
-            filter.setAllowedLoggers(null); // 화면에는 없음 → 빈 값
-            watcherConfig.setFilter(filter);
+                if (wReq.getParser() != null) {
+                    ParserConfig.ParserDetailConfig detail = new ParserConfig.ParserDetailConfig();
+                    detail.setTimezone(wReq.getParser().getTimezone());
+                    parser.setConfig(detail);
+                } else {
+                    parser.setConfig(null);
+                }
+                watcher.setParser(parser);
+
+                // Filter
+                FilterConfig filter = new FilterConfig();
+                if ("tomcat".equalsIgnoreCase(wReq.getParserType())) {
+                    filter.setAllowedMethods(wReq.getFilter() != null ? Set.copyOf(wReq.getFilter().getAllowedMethods()) : Set.of());
+                } else { // springboot
+                    filter.setAllowedLevels(wReq.getFilter() != null ? Set.copyOf(wReq.getFilter().getAllowedLevels()) : Set.of());
+                    filter.setRequiredKeywords(wReq.getFilter() != null ? Set.copyOf(wReq.getFilter().getRequiredKeywords()) : Set.of());
+                }
+                watcher.setFilter(filter);
+
+                watcherConfigs.add(watcher);
+
+                // DB에 logPipeline 저장
+                String wcJson = objectMapper.writeValueAsString(watcher);
+                logPipelineRepository.save(
+                        new LogPipelineConfig(
+                                watcher.getEtag(),
+                                watcher.getThNum(),
+                                watcher.getTailer() != null ? watcher.getTailer().getFilePath() : null,
+                                wcJson,
+                                entity
+                        )
+                );
+            }
+
+            List<LogPipelineConfig> pipelines = logPipelineRepository.findByAgentConfiguration(entity);
+            List<WatcherConfig> allWatchers = new ArrayList<>();
+            for (LogPipelineConfig p : pipelines) {
+                WatcherConfig wc = objectMapper.readValue(p.getConfigJson(), WatcherConfig.class);
+                String pushUrl = String.format(
+                        "http://ec2-3-39-232-72.ap-northeast-2.compute.amazonaws.com:8080/api/v1/streaming/logs/tomcat/%s/%d",
+                        agentId,
+                        wc.getThNum()
+                );
+                if (wc.getExporter() != null) {
+                    wc.getExporter().setPushURL(pushUrl);
+                }
+                allWatchers.add(wc);
+            }
 
             // 최종 ConfigDTO
             ConfigDTO configDTO = new ConfigDTO();
-            configDTO.setEtag(etag);
-
-            AgentConfig agentConfig = new AgentConfig();
-            agentConfig.setAgentId(agentId);
-            agentConfig.setAccessToken(null); // 서버 고정값 = null
-            agentConfig.setEtag(etag);
+            configDTO.setEtag(configEtag);
             configDTO.setAgentConfig(agentConfig);
-
             configDTO.setPullerConfig(pullerConfig);
-            configDTO.setWatcherConfigs(List.of(watcherConfig));
+            configDTO.setLogPipelineConfigs(allWatchers);
 
-            // JSON 변환 후 DB 저장
+            // 저장
             String json = objectMapper.writeValueAsString(configDTO);
-
-            AgentConfiguration entity = repository.findByAgentId(agentId)
-                    .map(existing -> {
-                        existing.update(etag, json);
-                        return existing;
-                    })
-                    .orElse(new AgentConfiguration(agentId, etag, json));
-
-
+            entity.update(configEtag, json);
             repository.save(entity);
             return agentId;
         } catch (JsonProcessingException e) {
