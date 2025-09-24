@@ -1,5 +1,6 @@
 package com.logmate.agentConfig.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logmate.agentConfig.dto.ConfigDTO;
 import com.logmate.agentConfig.dto.SaveDashboardConfigRequest;
 import com.logmate.agentConfig.service.AgentConfigService;
@@ -15,13 +16,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/folders/{folderId}/dashboards")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class AgentConfigController {
     private final AgentConfigService service;
     private final UserRepository userRepository;
 
-    @PostMapping("/{dashboardId}/config")
+    @PostMapping("/folders/{folderId}/dashboards/{dashboardId}/config")
     public ResponseEntity<BaseResponse<Map<String, String>>> saveConfig(@PathVariable Long folderId,
                                                          @PathVariable Long dashboardId,
                                                          @RequestBody SaveDashboardConfigRequest request,
@@ -46,6 +47,34 @@ public class AgentConfigController {
             return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(BaseResponse.of(304, "변경된 설정 없음", null));
         }
         return ResponseEntity.ok(config); // 최신 ConfigDTO 응답
+    }
+
+    @PutMapping("/folders/{folderId}/dashboards/{dashboardId}/config")
+    public ResponseEntity<BaseResponse<Map<String, Object>>> updatePipeline(@PathVariable Long folderId,
+                                                                            @PathVariable Long dashboardId,
+                                                                            @RequestBody Map<String, Object> requestBody,
+                                                                            HttpServletRequest httpRequest) {
+        String email = (String) httpRequest.getAttribute("email");
+        userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        // 요청 파라미터 파싱
+        String agentId = (String) requestBody.get("agentId");
+        String targetFilePath = (String) requestBody.get("targetFilePath");
+
+        // Jackson 으로 nested object → DTO 변환
+        SaveDashboardConfigRequest.WatcherRequest watcherReq =
+                new ObjectMapper().convertValue(requestBody.get("logPipelineConfig"),
+                        SaveDashboardConfigRequest.WatcherRequest.class);
+
+        service.updatePipeline(agentId, targetFilePath, watcherReq);
+
+        Map<String, Object> response = Map.of(
+                "agentId", agentId,
+                "updatedFilePath", targetFilePath
+        );
+
+        return ResponseEntity.ok(BaseResponse.of(200, "LogPipeline 업데이트 성공", response));
     }
 }
 
