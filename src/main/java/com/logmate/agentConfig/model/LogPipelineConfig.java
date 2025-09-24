@@ -36,9 +36,10 @@ public class LogPipelineConfig {
         this.createdAt = LocalDateTime.now();
     }
 
-    public LogPipelineConfig(String etag, Integer thNum, String configJson, AgentConfiguration agentConfiguration) {
+    public LogPipelineConfig(String etag, Integer thNum, String filePath, String configJson, AgentConfiguration agentConfiguration) {
         this.etag = etag;
         this.thNum = thNum;
+        this.filePath = filePath;
         this.configJson = configJson;
         this.agentConfiguration = agentConfiguration;
         this.createdAt = LocalDateTime.now();
