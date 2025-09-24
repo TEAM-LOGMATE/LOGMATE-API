@@ -15,7 +15,7 @@ public class FolderDto {
     private String updatedAt;
 
     public static FolderDto from(Folder folder) {
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
         return new FolderDto(
                 folder.getId(),
                 folder.getName(),
