@@ -1,0 +1,156 @@
+@startuml
+package "agentConfig" {
+
+  class AgentConfigController {
+    - service: AgentConfigService
+    - userRepository: UserRepository
+    + saveConfig(folderId: Long, dashboardId: Long, request: SaveDashboardConfigRequest, httpRequest: HttpServletRequest): ResponseEntity
+    + getConfig(agentId: String, etag: String, httpRequest: HttpServletRequest): ResponseEntity
+    + updatePipeline(folderId: Long, dashboardId: Long, requestBody: Map, httpRequest: HttpServletRequest): ResponseEntity
+    + getConfigsByFolder(folderId: Long, httpRequest: HttpServletRequest): ResponseEntity
+  }
+
+  class AgentConfigService {
+    - repository: AgentConfigurationRepository
+    - logPipelineRepository: LogPipelineConfigRepository
+    - objectMapper: ObjectMapper
+    - dashboardService: DashboardService
+    + saveConfig(request: SaveDashboardConfigRequest, dashboardId: Long): String
+    + getConfig(agentId: String, etag: String): ConfigDTO
+    + updatePipeline(agentId: String, targetFilePath: String, dashboardId: Long, request: SaveDashboardConfigRequest.WatcherRequest): void
+    + getConfigsByFolder(folderId: Long): List<DashboardConfigResponse>
+  }
+
+  ' ==== Entity & Repository ====
+  class AgentConfiguration {
+    - id: Long
+    - agentId: String
+    - etag: String
+    - configJson: String
+    - createdAt: LocalDateTime
+    - lastUpdatedAt: LocalDateTime
+    - logPipelineConfigs: List<LogPipelineConfig>
+    + update(newEtag: String, newConfigJson: String)
+  }
+
+  class LogPipelineConfig {
+    - id: Long
+    - etag: String
+    - thNum: Integer
+    - filePath: String
+    - dashboardId: Long
+    - configJson: String
+    - createdAt: LocalDateTime
+    - agentConfiguration: AgentConfiguration
+    + update(newEtag: String, newFilePath: String, newConfigJson: String)
+  }
+
+  interface AgentConfigurationRepository {
+    + findByAgentId(agentId: String): Optional<AgentConfiguration>
+  }
+
+  interface LogPipelineConfigRepository {
+    + findByAgentConfiguration(agentConfig: AgentConfiguration): List<LogPipelineConfig>
+    + findByDashboardId(dashboardId: Long): List<LogPipelineConfig>
+    + findByDashboardIdIn(dashboardIds: List<Long>): List<LogPipelineConfig>
+  }
+
+  ' ==== DTO & Config Objects ====
+  class SaveDashboardConfigRequest {
+    - agentId: String
+    - puller: PullerRequest
+    - logPipelineConfigs: List<WatcherRequest>
+  }
+
+  class DashboardConfigResponse {
+    - dashboardId: Long
+    - logPipelineConfigs: List<WatcherConfig>
+  }
+
+  class ConfigDTO {
+    - etag: String
+    - agentConfig: AgentConfig
+    - pullerConfig: PullerConfig
+    - logPipelineConfigs: List<WatcherConfig>
+  }
+
+  class AgentConfig {
+    - agentId: String
+    - accessToken: String
+    - etag: String
+  }
+
+  class WatcherConfig {
+    - etag: String
+    - thNum: Integer
+    - dashboardId: Long
+    - tailer: TailerConfig
+    - multiline: MultilineConfig
+    - exporter: ExporterConfig
+    - parser: ParserConfig
+    - filter: FilterConfig
+  }
+
+  class TailerConfig {
+    - filePath: String
+    - readIntervalMs: int
+    - metaDataFilePathPrefix: String
+  }
+
+  class MultilineConfig {
+    - enabled: boolean
+    - maxLines: int
+  }
+
+  class ExporterConfig {
+    - pushURL: String
+    - compressEnabled: Boolean
+    - retryIntervalSec: int
+    - maxRetryCount: int
+  }
+
+  class ParserConfig {
+    - type: String
+    - config: ParserDetailConfig
+  }
+
+  class ParserDetailConfig {
+    - timezone: String
+  }
+
+  class FilterConfig {
+    - allowedMethods: Set<String>
+    - allowedLevels: Set<String>
+    - requiredKeywords: Set<String>
+  }
+
+  class PullerConfig {
+    - pullURL: String
+    - intervalSec: int
+    - etag: String
+  }
+
+  ' ==== 관계 ====
+  AgentConfigController --> AgentConfigService
+  AgentConfigService --> AgentConfigurationRepository
+  AgentConfigService --> LogPipelineConfigRepository
+  AgentConfigService --> DashboardService
+
+  AgentConfiguration --> LogPipelineConfig : "1..*"
+  LogPipelineConfig --> AgentConfiguration
+
+  ConfigDTO --> AgentConfig
+  ConfigDTO --> PullerConfig
+  ConfigDTO --> WatcherConfig
+
+  DashboardConfigResponse --> WatcherConfig
+
+  WatcherConfig --> TailerConfig
+  WatcherConfig --> MultilineConfig
+  WatcherConfig --> ExporterConfig
+  WatcherConfig --> ParserConfig
+  WatcherConfig --> FilterConfig
+
+  ParserConfig --> ParserDetailConfig
+}
+@enduml

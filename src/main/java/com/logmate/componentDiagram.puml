@@ -1,0 +1,16 @@
+@startuml
+component "AgentConfig" as agentConfig
+component "Auth" as auth
+component "Config" as config
+component "Dashboard" as dashboard
+component "Folder" as folder
+component "Global" as global
+component "Team" as team
+component "User" as user
+component "Webhook" as webhook
+
+auth --> user
+dashboard --> team
+webhook --> dashboard
+agentConfig --> dashboard
+@enduml

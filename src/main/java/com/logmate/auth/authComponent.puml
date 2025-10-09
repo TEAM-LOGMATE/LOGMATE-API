@@ -1,0 +1,46 @@
+@startuml
+package "auth" {
+
+  package "dto" {
+    class LoginRequest {
+      - email: String
+      - password: String
+    }
+
+    class LoginResponse {
+      - token: String
+      - userId: Long
+      - email: String
+      - userName: String
+    }
+  }
+
+  package "util" {
+    class JwtUtil {
+      - key: Key
+      - EXPIRATION_TIME: long
+      + generateToken(email: String): String
+      + validateAndGetEmail(token: String): String
+      + extractEmailFromRequest(request: HttpServletRequest): String
+    }
+
+    class TokenBlacklist {
+      - blacklist: Set<String>
+      + add(token: String): void
+      + contains(token: String): boolean
+    }
+  }
+
+  class JwtAuthenticationFilter {
+      - jwtUtil: JwtUtil
+      - tokenBlacklist: TokenBlacklist
+      + doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain): void
+  }
+
+  ' 의존 관계 (실제 코드 반영)
+  JwtAuthenticationFilter --> JwtUtil : uses
+  JwtAuthenticationFilter --> TokenBlacklist : uses
+  JwtUtil --> LoginResponse : "generates"
+  JwtUtil --> LoginRequest : "validates"
+}
+@enduml

@@ -1,0 +1,117 @@
+@startuml
+package "team" {
+
+  class TeamController {
+    - teamService: TeamService
+    - userRepository: UserRepository
+    + getMyTeams(request: HttpServletRequest): ResponseEntity
+    + createTeam(request: CreateTeamRequest, httpRequest: HttpServletRequest): ResponseEntity
+    + updateTeam(teamId: Long, request: UpdateTeamRequest, httpRequest: HttpServletRequest): ResponseEntity
+    + getInviteUrl(teamId: Long): ResponseEntity
+    + deleteTeam(teamId: Long, httpRequest: HttpServletRequest): ResponseEntity
+    + getTeamDetail(teamId: Long, httpRequest: HttpServletRequest): ResponseEntity
+  }
+
+  class TeamService {
+    - teamMemberRepository: TeamMemberRepository
+    - teamRepository: TeamRepository
+    - userRepository: UserRepository
+    - folderService: FolderService
+    - folderRepository: FolderRepository
+    + getTeamsByUser(user: User): List<TeamDto>
+    + createTeam(request: CreateTeamRequest, creator: User): TeamDto
+    + generateInviteUrl(teamId: Long): String
+    + updateTeam(teamId: Long, request: UpdateTeamRequest, requester: User): TeamDto
+    + deleteTeam(teamId: Long, requester: User): void
+    + getTeamDetail(teamId: Long, requester: User): TeamDetailDto
+  }
+
+  class Team {
+    - id: Long
+    - name: String
+    - description: String
+    - members: List<TeamMember>
+    - dashboards: List<Dashboard>
+  }
+
+  class TeamMember {
+    - id: Long
+    - team: Team
+    - user: User
+    - role: MemberRole
+  }
+
+  enum MemberRole {
+    ADMIN
+    MEMBER
+    VIEWER
+  }
+
+  class TeamDto {
+    - id: long
+    - name: String
+    - description: String
+    - teamFolderId: Long
+    - myRole: String
+  }
+
+  class TeamDetailDto {
+    - id: long
+    - name: String
+    - description: String
+    - teamFolderId: Long
+    - members: List<TeamMemberDto>
+  }
+
+  class TeamMemberDto {
+    - name: String
+    - email: String
+    - role: MemberRole
+  }
+
+  class CreateTeamRequest {
+    - name: String
+    - description: String
+    - members: List<MemberRoleRequest>
+  }
+
+  class MemberRoleRequest {
+    - userId: Long
+    - email: String
+    - role: MemberRole
+  }
+
+  class UpdateTeamRequest {
+    - name: String
+    - description: String
+    - members: List<UpdateTeamMemberRoleRequest>
+  }
+
+  class UpdateTeamMemberRoleRequest {
+    - userId: Long
+    - email: String
+    - role: MemberRole
+    - remove: boolean
+  }
+
+  interface TeamRepository
+  interface TeamMemberRepository
+  interface UserRepository
+  interface FolderRepository
+  class FolderService
+
+  ' 관계
+  TeamController --> TeamService
+  TeamController --> UserRepository
+  TeamService --> TeamRepository
+  TeamService --> TeamMemberRepository
+  TeamService --> UserRepository
+  TeamService --> FolderService
+  TeamService --> FolderRepository
+  Team --> TeamMember
+  TeamMember --> User
+  TeamMember --> MemberRole
+  TeamDetailDto --> TeamMemberDto
+  TeamDto --> Team
+}
+@enduml

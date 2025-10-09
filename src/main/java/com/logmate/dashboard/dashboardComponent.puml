@@ -1,0 +1,59 @@
+@startuml
+package "dashboard" {
+
+  class DashboardController {
+    - dashboardService: DashboardService
+    - userRepository: UserRepository
+    + getDashboards(folderId: Long, request: HttpServletRequest): ResponseEntity
+    + createDashboard(folderId: Long, request: DashboardRequest, httpRequest: HttpServletRequest): ResponseEntity
+    + updateDashboard(folderId: Long, dashboardId: Long, request: DashboardRequest, httpRequest: HttpServletRequest): ResponseEntity
+    + deleteDashboard(folderId: Long, dashboardId: Long, httpRequest: HttpServletRequest): ResponseEntity
+  }
+
+  class DashboardService {
+    - dashboardRepository: DashboardRepository
+    - folderRepository: FolderRepository
+    - teamMemberRepository: TeamMemberRepository
+    + getDashboardsByFolder(folderId: Long, requester: User): List<DashboardDto>
+    + createDashboard(folderId: Long, request: DashboardRequest, requester: User): DashboardDto
+    + updateDashboard(folderId: Long, dashboardId: Long, request: DashboardRequest, requester: User): DashboardDto
+    + deleteDashboard(folderId: Long, dashboardId: Long, requester: User): void
+  }
+
+  class DashboardDto {
+    - id: Long
+    - name: String
+    - logPath: String
+    - lastModified: String
+    - folderId: Long
+  }
+
+  class DashboardRequest {
+    - name: String
+    - logPath: String
+  }
+
+  class Dashboard {
+    - id: Long
+    - name: String
+    - logPath: String
+    - team: Team
+    - user: User
+    - folder: Folder
+  }
+
+  interface DashboardRepository
+  interface FolderRepository
+  interface TeamMemberRepository
+  interface UserRepository
+
+  ' 관계
+  DashboardController --> DashboardService
+  DashboardController --> UserRepository
+  DashboardService --> DashboardRepository
+  DashboardService --> FolderRepository
+  DashboardService --> TeamMemberRepository
+  DashboardService --> DashboardDto
+  DashboardDto --> Dashboard
+}
+@enduml

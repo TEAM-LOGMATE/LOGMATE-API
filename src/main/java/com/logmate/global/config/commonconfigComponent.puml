@@ -1,0 +1,31 @@
+@startuml
+package "global.config" {
+
+  class SecurityConfig {
+    + filterChain(http: HttpSecurity, jwtFilter: JwtAuthenticationFilter): SecurityFilterChain
+    + passwordEncoder(): PasswordEncoder
+  }
+
+  class WebConfig {
+    + addCorsMappings(registry: CorsRegistry): void
+  }
+
+  ' 외부 클래스 (라이브러리/프레임워크)
+  class HttpSecurity
+  class SecurityFilterChain
+  class UsernamePasswordAuthenticationFilter
+  class PasswordEncoder
+  class BCryptPasswordEncoder
+  class CorsRegistry
+
+  ' Auth 모듈과의 연결
+  class JwtAuthenticationFilter
+
+  ' 관계
+  SecurityConfig --> JwtAuthenticationFilter : uses
+  SecurityConfig --> SecurityFilterChain : returns
+  SecurityConfig --> PasswordEncoder : returns
+  PasswordEncoder <|.. BCryptPasswordEncoder
+  WebConfig --> CorsRegistry : configures
+}
+@enduml

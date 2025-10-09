@@ -1,0 +1,80 @@
+@startuml
+package "user" {
+
+  class UserController {
+    - userService: UserService
+    - tokenBlacklist: TokenBlacklist
+    - jwtUtil: JwtUtil
+    + registerUser(user: User): ResponseEntity
+    + login(loginRequest: LoginRequest): ResponseEntity
+    + logout(request: HttpServletRequest): ResponseEntity
+    + getMyPage(request: HttpServletRequest): ResponseEntity
+    + updateMyProfile(request: UpdateUserRequest, httpRequest: HttpServletRequest): ResponseEntity
+    + checkEmail(email: String): ResponseEntity
+    + deleteMyAccount(httpRequest: HttpServletRequest): ResponseEntity
+  }
+
+  class UserService {
+    - userRepository: UserRepository
+    - jwtUtil: JwtUtil
+    - passwordEncoder: PasswordEncoder
+    + register(user: User): User
+    + login(email: String, password: String): LoginResponse
+    + getUserByEmail(email: String): User
+    + updateUser(currentEmail: String, updateUserRequest: UpdateUserRequest): LoginResponse
+    + isAvailableEmail(email: String): boolean
+    + deleteUser(email: String): void
+  }
+
+  class UpdateUserRequest {
+    - currentPassword: String
+    - newEmail: String
+    - newPassword: String
+  }
+
+  class User {
+    - id: Long
+    - email: String
+    - password: String
+    - name: String
+    - active: boolean
+  }
+
+  interface UserRepository {
+    + findByEmail(email: String): Optional<User>
+    + existsByEmail(email: String): boolean
+    + findByEmailIncludingInactive(email: String): Optional<User>
+  }
+
+  ' 외부 DTO/Util
+  class JwtUtil
+  class TokenBlacklist
+  class LoginRequest {
+    - email: String
+    - password: String
+  }
+  class LoginResponse {
+    - token: String
+    - userId: Long
+    - email: String
+    - userName: String
+  }
+  class PasswordEncoder
+
+  ' 관계
+  UserController --> UserService
+  UserController --> TokenBlacklist
+  UserController --> JwtUtil
+  UserService --> UserRepository
+  UserService --> JwtUtil
+  UserService --> PasswordEncoder
+  UserService --> UpdateUserRequest
+  UserService --> LoginResponse
+  UserRepository --> User
+
+  ' DTO 연관
+  UserController --> LoginRequest : consumes
+  UserController --> LoginResponse : returns
+  UserService --> LoginResponse : returns
+}
+@enduml
