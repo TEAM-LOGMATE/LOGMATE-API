@@ -3,6 +3,7 @@ package com.logmate.webhook.service;
 import com.logmate.webhook.dto.WebhookRequestDto;
 import com.logmate.webhook.dto.WebhookResponseDto;
 import com.logmate.webhook.model.Webhook;
+import com.logmate.webhook.model.WebhookType;
 import com.logmate.webhook.repository.WebhookRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,10 +51,18 @@ public class WebhookService {
     }
 
     public void testSend(String url) {
+        Map<String, String> payload;
+
+        if (url.contains("discord.com")) {
+            payload = Map.of("content", "Webhook 테스트 메시지입니다."); //Discord 전용
+        } else {
+            payload = Map.of("text", "Webhook 테스트 메시지입니다.");    //Slack/Custom
+        }
+
         WebClient.create()
                 .post()
                 .uri(url)
-                .bodyValue(Map.of("text", "Webhook 테스트 메시지입니다."))
+                .bodyValue(payload)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
@@ -65,10 +74,18 @@ public class WebhookService {
 
         for (Webhook webhook : webhooks) {
             try {
+                Map<String, String> payload;
+
+                // 타입별 payload 분기
+                if (webhook.getType() == WebhookType.DISCORD) {
+                    payload = Map.of("content", message); //Discord는 content 필드
+                } else {
+                    payload = Map.of("text", message);    //Slack/Custom은 text 필드
+                }
                 WebClient.create()
                         .post()
                         .uri(webhook.getUrl())
-                        .bodyValue(Map.of("text", message))
+                        .bodyValue(payload)
                         .retrieve()
                         .bodyToMono(String.class)
                         .block();
