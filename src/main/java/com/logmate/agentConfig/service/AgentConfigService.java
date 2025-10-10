@@ -23,6 +23,7 @@ public class AgentConfigService {
     private final AgentConfigurationRepository repository;
     private final LogPipelineConfigRepository logPipelineRepository;
     private final ObjectMapper objectMapper;
+    private final DashboardService dashboardService;
 
     public String saveConfig(SaveDashboardConfigRequest request, Long dashboardId) {
         try {
@@ -284,4 +285,30 @@ public class AgentConfigService {
             throw new RuntimeException("Pipeline update 실패", e);
         }
     }
+    public List<DashboardConfigResponse> getConfigsByFolder(Long folderId) {
+        // 1. 해당 폴더에 속한 dashboardId 목록 가져오기
+        List<Long> dashboardIds = dashboardService.getDashboardIdsByFolder(folderId);
+
+        // 2. DB에서 dashboardId에 해당하는 모든 pipeline 조회
+        List<LogPipelineConfig> pipelines = logPipelineRepository.findByDashboardIdIn(dashboardIds);
+
+        // 3. dashboardId별로 그룹핑 후 DTO로 변환
+        Map<Long, List<WatcherConfig>> grouped = new HashMap<>();
+        for (LogPipelineConfig pipeline : pipelines) {
+            try {
+                WatcherConfig wc = objectMapper.readValue(pipeline.getConfigJson(), WatcherConfig.class);
+                grouped.computeIfAbsent(pipeline.getDashboardId(), k -> new ArrayList<>()).add(wc);
+            } catch (Exception e) {
+                throw new RuntimeException("WatcherConfig 파싱 실패", e);
+            }
+        }
+
+        List<DashboardConfigResponse> result = new ArrayList<>();
+        for (Long dashboardId : grouped.keySet()) {
+            result.add(new DashboardConfigResponse(dashboardId, grouped.get(dashboardId)));
+        }
+
+        return result;
+    }
+
 }

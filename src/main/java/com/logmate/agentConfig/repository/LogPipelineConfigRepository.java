@@ -11,4 +11,9 @@ import java.util.List;
 public interface LogPipelineConfigRepository extends JpaRepository<LogPipelineConfig, Long> {
     List<LogPipelineConfig> findByAgentConfiguration(AgentConfiguration agentConfig);
     LogPipelineConfig findByAgentConfigurationAndFilePath(AgentConfiguration agentConfig, String filePath);
+    List<LogPipelineConfig> findByDashboardId(Long dashboardId);
+    LogPipelineConfig findByAgentConfigurationAndFilePathAndDashboardId(
+            AgentConfiguration agentConfig, String filePath, Long dashboardId);
+    List<LogPipelineConfig> findByDashboardIdIn(List<Long> dashboardIds);
+
 }

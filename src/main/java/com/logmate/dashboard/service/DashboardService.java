@@ -104,4 +104,8 @@ public class DashboardService {
         }
         throw new CustomException(HttpStatus.BAD_REQUEST, "잘못된 폴더입니다.");
     }
+
+    public List<Long> getDashboardIdsByFolder(Long folderId) {
+        return dashboardRepository.findIdsByFolderId(folderId);
+    }
 }
