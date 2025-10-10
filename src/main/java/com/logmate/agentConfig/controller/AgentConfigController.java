@@ -27,7 +27,7 @@ public class AgentConfigController {
                                                          @PathVariable Long dashboardId,
                                                          @RequestBody SaveDashboardConfigRequest request,
                                                          HttpServletRequest httpRequest) {
-        String agentId = service.saveConfig(request);
+        String agentId = service.saveConfig(request, dashboardId);
 
         Map<String, Object> response = Map.of(
                 "agentId", agentId,

@@ -7,6 +7,7 @@ import com.logmate.agentConfig.model.AgentConfiguration;
 import com.logmate.agentConfig.model.LogPipelineConfig;
 import com.logmate.agentConfig.repository.AgentConfigurationRepository;
 import com.logmate.agentConfig.repository.LogPipelineConfigRepository;
+import com.logmate.dashboard.service.DashboardService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class AgentConfigService {
     private final LogPipelineConfigRepository logPipelineRepository;
     private final ObjectMapper objectMapper;
 
-    public String saveConfig(SaveDashboardConfigRequest request) {
+    public String saveConfig(SaveDashboardConfigRequest request, Long dashboardId) {
         try {
             //String etag = UUID.randomUUID().toString(); // 새로운 etag 생성
             String configEtag = UUID.randomUUID().toString();
@@ -121,7 +122,8 @@ public class AgentConfigService {
                                 watcher.getThNum(),
                                 watcher.getTailer() != null ? watcher.getTailer().getFilePath() : null,
                                 wcJson,
-                                entity
+                                entity,
+                                dashboardId
                         )
                 );
             }
@@ -194,13 +196,13 @@ public class AgentConfigService {
     }
 
     @Transactional
-    public void updatePipeline(String agentId, String targetFilePath, SaveDashboardConfigRequest.WatcherRequest request) {
+    public void updatePipeline(String agentId, String targetFilePath, Long dashboardId, SaveDashboardConfigRequest.WatcherRequest request) {
         AgentConfiguration agentConfig = repository.findByAgentId(agentId)
                 .orElseThrow(() -> new RuntimeException("Agent not found"));
 
-        LogPipelineConfig pipeline = logPipelineRepository.findByAgentConfigurationAndFilePath(agentConfig, targetFilePath);
+        LogPipelineConfig pipeline = logPipelineRepository.findByAgentConfigurationAndFilePathAndDashboardId(agentConfig, targetFilePath, dashboardId);
         if (pipeline == null) {
-            throw new RuntimeException("Pipeline not found for filePath: " + targetFilePath);
+            throw new RuntimeException("Pipeline not found for filePath: " + targetFilePath + " and dashboardId: " + dashboardId);
         }
 
         try {

@@ -21,6 +21,8 @@ public class LogPipelineConfig {
 
     private String filePath;
 
+    private Long dashboardId;
+
     @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String configJson; // watcherConfig 전체 JSON (tailer, multiline, exporter, parser, filter 포함)
@@ -36,13 +38,14 @@ public class LogPipelineConfig {
         this.createdAt = LocalDateTime.now();
     }
 
-    public LogPipelineConfig(String etag, Integer thNum, String filePath, String configJson, AgentConfiguration agentConfiguration) {
+    public LogPipelineConfig(String etag, Integer thNum, String filePath, String configJson, AgentConfiguration agentConfiguration, Long dashboardId) {
         this.etag = etag;
         this.thNum = thNum;
         this.filePath = filePath;
         this.configJson = configJson;
         this.agentConfiguration = agentConfiguration;
         this.createdAt = LocalDateTime.now();
+        this.dashboardId = dashboardId;
     }
     public void update(String newEtag, String newFilePath, String newConfigJson) {
         this.etag = newEtag;
