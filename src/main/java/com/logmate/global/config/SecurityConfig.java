@@ -1,4 +1,4 @@
-package com.logmate.config;
+package com.logmate.global.config;
 
 import com.logmate.auth.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
@@ -13,21 +13,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 public class SecurityConfig {
-
-    /*@Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (API 서버)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**").permitAll() // 회원가입/로그인 허용
-                        .anyRequest().authenticated()                 // 그 외는 인증 필요
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(Customizer.withDefaults()); // 테스트용 basic 로그인 허용
-
-        return http.build();
-    }*/
-    // 프론트 연동을 위해 임시로 로그인 X
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
         http
