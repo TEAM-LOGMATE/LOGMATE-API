@@ -1,5 +1,6 @@
 package com.logmate.webhook.controller;
 
+import com.logmate.global.CustomException;
 import com.logmate.user.model.User;
 import com.logmate.user.repository.UserRepository;
 import com.logmate.webhook.dto.WebhookRequestDto;
@@ -7,8 +8,8 @@ import com.logmate.webhook.dto.WebhookResponseDto;
 import com.logmate.webhook.service.WebhookService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -41,10 +42,14 @@ public class WebhookController {
     //등록된 Webhook으로 알림 전송
     @PostMapping("/trigger")
     public ResponseEntity<Void> trigger(
-            @AuthenticationPrincipal Long userId,//추후 인증처리 하는걸로
-            @RequestParam String message
+            @RequestParam String message,
+            HttpServletRequest request
     ) {
-        webhookService.sendEventToUserWebhooks(userId, message);
+        String email = (String) request.getAttribute("email");
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        webhookService.sendEventToUserWebhooks(user.getId(), message);
         return ResponseEntity.ok().build();
     }
 }
