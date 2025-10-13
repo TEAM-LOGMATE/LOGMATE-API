@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/webhooks")
 @RequiredArgsConstructor
@@ -51,5 +53,31 @@ public class WebhookController {
 
         webhookService.sendEventToUserWebhooks(user.getId(), message);
         return ResponseEntity.ok().build();
+    }
+
+    //본인의 웹훅 url 조회
+    @GetMapping
+    public ResponseEntity<List<WebhookResponseDto>> getUserWebhooks(HttpServletRequest request) {
+        String email = (String) request.getAttribute("email");
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        List<WebhookResponseDto> webhooks = webhookService.getUserWebhooks(user.getId());
+        return ResponseEntity.ok(webhooks);
+    }
+
+    //Webhook 삭제
+    @DeleteMapping("/{webhookId}")
+    public ResponseEntity<Void> deleteWebhook(
+            @PathVariable Long webhookId,
+            HttpServletRequest request
+    ) {
+        String email = (String) request.getAttribute("email");
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+        webhookService.deleteWebhook(user.getId(), webhookId);
+        return ResponseEntity.noContent().build(); // 204
+
     }
 }
