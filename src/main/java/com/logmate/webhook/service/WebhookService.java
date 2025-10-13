@@ -1,5 +1,6 @@
 package com.logmate.webhook.service;
 
+import com.logmate.global.CustomException;
 import com.logmate.webhook.dto.WebhookRequestDto;
 import com.logmate.webhook.dto.WebhookResponseDto;
 import com.logmate.webhook.model.Webhook;
@@ -7,6 +8,7 @@ import com.logmate.webhook.model.WebhookType;
 import com.logmate.webhook.repository.WebhookRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -25,6 +27,11 @@ public class WebhookService {
     public WebhookResponseDto register(Long userId, WebhookRequestDto dto) {
         if (!isValidUrl(dto.getUrl())) {
             throw new IllegalArgumentException("유효하지 않은 URL입니다.");
+        }
+
+        boolean existUrl = webhookRepository.existsByUserIdAndUrl(userId,dto.getUrl());
+        if(existUrl){
+            throw new CustomException(HttpStatus.CONFLICT, "이미 등록된 URL입니다.");
         }
 
         Webhook webhook = new Webhook();
