@@ -104,4 +104,33 @@ public class WebhookService {
             }
         }
     }
+
+    //웹훅 삭제 메서드
+    public void deleteWebhook(Long userId, Long webhookId) {
+        Webhook webhook = webhookRepository.findById(webhookId)
+                .orElseThrow(() -> new CustomException(HttpStatus.NOT_FOUND, "해당 url을 찾을 수 없습니다."));
+
+        if(!webhook.getUserId().equals(userId)){
+            throw new CustomException(HttpStatus.FORBIDDEN, "삭제 권한이 없습니다.");
+        }
+        webhookRepository.delete(webhook);
+    }
+
+    //웹훅 조회 메서드
+    public List<WebhookResponseDto> getUserWebhooks(Long userId) {
+        List<Webhook> webhooks = webhookRepository.findByUserId(userId);
+
+        if (webhooks.isEmpty()) {
+            throw new CustomException(HttpStatus.NOT_FOUND, "등록된 Webhook이 없습니다.");
+        }
+
+        return webhooks.stream()
+                .map(w -> new WebhookResponseDto(
+                        w.getId(),
+                        w.getType(),
+                        w.getUrl(),
+                        w.isActive()
+                ))
+                .toList();
+    }
 }
