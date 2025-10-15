@@ -33,6 +33,13 @@ public class AgentConfiguration {
 
     private LocalDateTime createdAt;
 
+    //Agent가 마지막으로 pulling한 시각
+    private LocalDateTime lastPulledAt;
+
+    //Agent가 한 번이라도 pulling 요청을 보냈는지 여부
+    @Column(nullable = false)
+    private boolean pulledOnce = false;
+
     // logPipelineConfigs 관계 설정
     @OneToMany(mappedBy = "agentConfiguration", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<LogPipelineConfig> logPipelineConfigs = new ArrayList<>();
@@ -60,5 +67,11 @@ public class AgentConfiguration {
         this.etag = etag;
         this.configJson = configJson;
         this.createdAt = LocalDateTime.now();
+    }
+
+    // 동시에 갱신하는 메서드
+    public void markPulled() {
+        this.lastPulledAt = LocalDateTime.now(); //agent get 요청시각
+        this.pulledOnce = true;  //한번이라도 pulling 요청 있었는지
     }
 }
