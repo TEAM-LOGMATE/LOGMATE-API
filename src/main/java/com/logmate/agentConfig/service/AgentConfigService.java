@@ -198,7 +198,7 @@ public class AgentConfigService {
     }
 
     @Transactional
-    public void updatePipeline(String agentId, String targetFilePath, Long dashboardId, SaveDashboardConfigRequest.WatcherRequest request) {
+    public void updatePipeline(String agentId, String targetFilePath, Long dashboardId, SaveDashboardConfigRequest.WatcherRequest request, SaveDashboardConfigRequest.PullerRequest pullerRequest) {
         AgentConfiguration agentConfig = repository.findByAgentId(agentId)
                 .orElseThrow(() -> new RuntimeException("Agent not found"));
 
@@ -278,6 +278,18 @@ public class AgentConfigService {
                 watchers.add(wc);
             }
             dto.setLogPipelineConfigs(watchers);
+
+            // PullerConfig intervalSec 수정 (프론트 요청에 포함된 경우)
+            if (pullerRequest!= null && pullerRequest.getIntervalSec() > 0) {
+                PullerConfig puller = dto.getPullerConfig();
+                if (puller == null) {
+                    puller = new PullerConfig();
+                    puller.setPullURL("https://15.164.114.73");
+                }
+                puller.setIntervalSec(pullerRequest.getIntervalSec());
+                puller.setEtag(UUID.randomUUID().toString());
+                dto.setPullerConfig(puller);
+            }
 
             // 전체 etag 갱신
             String configEtag = UUID.randomUUID().toString();

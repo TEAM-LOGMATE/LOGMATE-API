@@ -72,7 +72,12 @@ public class AgentConfigController {
                 new ObjectMapper().convertValue(requestBody.get("logPipelineConfig"),
                         SaveDashboardConfigRequest.WatcherRequest.class);
 
-        service.updatePipeline(agentId, targetFilePath, dashboardId, watcherReq);
+        SaveDashboardConfigRequest.PullerRequest pullerReq =
+                new ObjectMapper().convertValue(requestBody.get("puller"),
+                        SaveDashboardConfigRequest.PullerRequest.class);
+
+
+        service.updatePipeline(agentId, targetFilePath, dashboardId, watcherReq, pullerReq);
 
         Map<String, Object> response = Map.of(
                 "agentId", agentId,
