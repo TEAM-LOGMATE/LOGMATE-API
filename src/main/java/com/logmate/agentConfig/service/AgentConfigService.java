@@ -52,7 +52,12 @@ public class AgentConfigService {
             //PullerConfig
             PullerConfig pullerConfig = new PullerConfig();
             pullerConfig.setPullURL("http://15.164.114.73/api/config"); // agnet pull 요청 URL
-            pullerConfig.setIntervalSec(0);
+            int intervalSec = 10; // fallback
+            if (request.getPuller() != null && request.getPuller().getIntervalSec() > 0) {
+                intervalSec = request.getPuller().getIntervalSec();
+            }
+            pullerConfig.setIntervalSec(intervalSec);
+
             pullerConfig.setEtag(UUID.randomUUID().toString());
 
             int currentCount = logPipelineRepository.findByAgentConfiguration(entity).size();
