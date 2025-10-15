@@ -8,5 +8,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DashboardConfigResponse {
     private Long dashboardId;
+    private PullerConfig pullerConfig;
     private List<WatcherConfig> logPipelineConfigs;
+    private String dashboardStatus;
 }
