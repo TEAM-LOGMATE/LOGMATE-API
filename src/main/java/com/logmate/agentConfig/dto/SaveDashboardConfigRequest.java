@@ -41,6 +41,7 @@ public class SaveDashboardConfigRequest {
 
     @Data
     public static class PullerRequest {
+        private int intervalSec;
     }
 
     @Data
