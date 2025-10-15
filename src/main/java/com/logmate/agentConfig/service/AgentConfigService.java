@@ -139,7 +139,7 @@ public class AgentConfigService {
             for (LogPipelineConfig p : pipelines) {
                 WatcherConfig wc = objectMapper.readValue(p.getConfigJson(), WatcherConfig.class);
                 String pushUrl = String.format(
-                        "http://ec2-3-39-232-72.ap-northeast-2.compute.amazonaws.com:8080/api/v1/streaming/logs/tomcat/%s/%d",
+                        "http://ec2-3-39-232-72.ap-northeast-2.compute.amazonaws.com:8080/api/v1/streaming/logs/%s/%d",
                         agentId,
                         wc.getThNum()
                 );
@@ -232,7 +232,13 @@ public class AgentConfigService {
 
             // Exporter
             ExporterConfig exporter = new ExporterConfig();
-            exporter.setPushURL(null);
+            String pushUrl = String.format(
+                    "http://ec2-3-39-232-72.ap-northeast-2.compute.amazonaws.com:8080/api/v1/streaming/logs/%s/%d",
+                    agentId,
+                    pipeline.getThNum()
+            );
+            exporter.setPushURL(pushUrl);
+
             exporter.setCompressEnabled(request.getExporter() != null ? request.getExporter().getCompressEnabled() : null);
             exporter.setRetryIntervalSec(request.getExporter() != null ? request.getExporter().getRetryIntervalSec() : 0);
             exporter.setMaxRetryCount(request.getExporter() != null ? request.getExporter().getMaxRetryCount() : 0);
