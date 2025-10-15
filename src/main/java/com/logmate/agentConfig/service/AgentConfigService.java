@@ -168,31 +168,28 @@ public class AgentConfigService {
     public ConfigDTO getConfig(String agentId, String etag) {
         return repository.findByAgentId(agentId)
                 .map(config -> {
-                    if (etag != null && !etag.isBlank() && config.getEtag().equals(etag)) {
-                        return null; // 변경 없음
-                    }
                     try {
+                        //pull 시각 기록 (etag 동일 여부와 무관하게)
+                        config.markPulled();
+                        repository.save(config);
+
+                        // etag 동일하면 변경 없음 응답
+                        if (etag != null && !etag.isBlank() && config.getEtag().equals(etag)) {
+                            return null; // 변경된 설정 없음
+                        }
+
+                        //변경 있음 → ConfigDTO 재조립
                         ConfigDTO dto = objectMapper.readValue(config.getConfigJson(), ConfigDTO.class);
 
-                        // logPipelineConfig DB에 저장된 항목들 다시 조립
                         List<LogPipelineConfig> pipelineEntities = logPipelineRepository.findByAgentConfiguration(config);
                         List<WatcherConfig> watchers = new ArrayList<>();
                         for (LogPipelineConfig p : pipelineEntities) {
                             WatcherConfig wc = objectMapper.readValue(p.getConfigJson(), WatcherConfig.class);
                             watchers.add(wc);
                         }
-                        // intervalSec 계산
-                        if (config.getLastUpdatedAt() != null) {
-                            long seconds = Duration.between(config.getLastUpdatedAt(), LocalDateTime.now()).getSeconds();
-                            PullerConfig puller = dto.getPullerConfig();
-                            if (puller == null) {
-                                puller = new PullerConfig();
-                            }
-                            puller.setIntervalSec((int) seconds);
-                            puller.setEtag(UUID.randomUUID().toString());
-                            dto.setPullerConfig(puller);
-                        }
+                        dto.setLogPipelineConfigs(watchers);
                         return dto;
+
                     } catch (Exception e) {
                         throw new RuntimeException("Config 파싱 실패", e);
                     }
