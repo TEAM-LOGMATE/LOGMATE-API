@@ -324,7 +324,34 @@ public class AgentConfigService {
 
         List<DashboardConfigResponse> result = new ArrayList<>();
         for (Long dashboardId : grouped.keySet()) {
-            result.add(new DashboardConfigResponse(dashboardId, grouped.get(dashboardId)));
+            Optional<AgentConfiguration> agentOpt = repository.findByDashboardId(dashboardId);
+
+            String status = "에이전트 미응답"; // default
+            PullerConfig pullerConfig = null;
+
+            if (agentOpt.isPresent()) {
+                AgentConfiguration agent = agentOpt.get();
+                LocalDateTime lastPulled = agent.getLastPulledAt();
+
+                int intervalSec = 10; // default
+                try {
+                    ConfigDTO dto = objectMapper.readValue(agent.getConfigJson(), ConfigDTO.class);
+                    if (dto.getPullerConfig() != null) {
+                        pullerConfig = dto.getPullerConfig();
+                        if (pullerConfig.getIntervalSec() > 0) {
+                            intervalSec = pullerConfig.getIntervalSec();
+                        }
+                    }
+                } catch (Exception ignored) {}
+                if (lastPulled != null) {
+                    long secondsSinceLast = Duration.between(lastPulled, LocalDateTime.now()).getSeconds();
+                    long threshold = Math.max(intervalSec, 10) + 30L;
+
+                    status = (secondsSinceLast > threshold) ? "에이전트 미응답" : "수집 중";
+                }
+            }
+
+            result.add(new DashboardConfigResponse(dashboardId, pullerConfig, grouped.get(dashboardId), status));
         }
 
         return result;
