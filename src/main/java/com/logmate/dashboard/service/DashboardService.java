@@ -1,5 +1,8 @@
 package com.logmate.dashboard.service;
 
+import com.logmate.agentConfig.model.LogPipelineConfig;
+import com.logmate.agentConfig.repository.AgentConfigurationRepository;
+import com.logmate.agentConfig.repository.LogPipelineConfigRepository;
 import com.logmate.dashboard.dto.DashboardDto;
 import com.logmate.dashboard.dto.DashboardRequest;
 import com.logmate.dashboard.model.Dashboard;
@@ -22,6 +25,9 @@ public class DashboardService {
     private final DashboardRepository dashboardRepository;
     private final FolderRepository folderRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final AgentConfigurationRepository  agentConfigurationRepository;
+    private final LogPipelineConfigRepository logPipelineConfigRepository;
+
 
     public List<DashboardDto> getDashboardsByFolder(Long folderId, User requester) {
         Folder folder = folderRepository.findById(folderId)
@@ -29,7 +35,20 @@ public class DashboardService {
 
         assertFolderReadable(folder, requester);
         return dashboardRepository.findByFolderId(folderId).stream()
-                .map(DashboardDto::from)
+                .map(dashboard -> {
+                    //dashboardId 기준으로 agentId 조회
+                    String agentId = agentConfigurationRepository.findByDashboardId(dashboard.getId())
+                            .map(agentConfig -> agentConfig.getAgentId())
+                            .orElse(null); // 없으면 null
+
+                    Integer thNum = logPipelineConfigRepository.findByDashboardId(dashboard.getId())
+                            .stream()
+                            .findFirst()
+                            .map(LogPipelineConfig::getThNum)
+                            .orElse(null);
+
+                    return DashboardDto.from(dashboard, agentId, thNum);
+                })
                 .toList();
     }
 
@@ -48,8 +67,7 @@ public class DashboardService {
                 .build();
 
         dashboardRepository.save(dashboard);
-
-        return DashboardDto.from(dashboard);
+        return DashboardDto.from(dashboard, null);
     }
 
     public DashboardDto updateDashboard(Long folderId, Long dashboardId, DashboardRequest request, User requester) {
@@ -66,6 +84,9 @@ public class DashboardService {
         dashboard.setLogPath(request.getLogPath());
 
         dashboardRepository.save(dashboard);
+        String agentId = agentConfigurationRepository.findByDashboardId(dashboardId)
+                .map(agentConfig -> agentConfig.getAgentId())
+                .orElse(null);
 
         return DashboardDto.from(dashboard);
     }
