@@ -27,7 +27,6 @@ public class AgentConfigService {
 
     public String saveConfig(SaveDashboardConfigRequest request, Long dashboardId) {
         try {
-            //String etag = UUID.randomUUID().toString(); // 새로운 etag 생성
             String configEtag = UUID.randomUUID().toString();
 
             String agentId = request.getAgentId();
@@ -51,7 +50,7 @@ public class AgentConfigService {
 
             //PullerConfig
             PullerConfig pullerConfig = new PullerConfig();
-            pullerConfig.setPullURL("http://15.164.114.73/api/config"); // agnet pull 요청 URL
+            pullerConfig.setPullURL("https://15.164.114.73"); // agnet pull 요청 URL
             int intervalSec = 10; // fallback
             if (request.getPuller() != null && request.getPuller().getIntervalSec() > 0) {
                 intervalSec = request.getPuller().getIntervalSec();
