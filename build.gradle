@@ -32,7 +32,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux' //webclient 사용을 위한 webflux 의존성
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.mysql:mysql-connector-j'
+	implementation 'org.mariadb.jdbc:mariadb-java-client:3.3.2' //mariadb 커넥터 사용
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5' // jwt 의존성
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // jwt 의존성
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'

@@ -10,15 +10,25 @@ spring:
       ddl-auto: update
     show-sql: true
     properties:
-      hibernate.format_sql: true
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
   mvc:
     throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
+  jackson:
+    time-zone: Asia/Seoul
 
 server:
-  port: 8081
+  port: 443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: ${KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
 
 logging:
   level:

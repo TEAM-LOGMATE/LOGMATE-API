@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface WebhookRepository extends JpaRepository<Webhook,Long> {
     List<Webhook> findByUserIdAndActiveTrue(Long userId);
+    boolean existsByUserIdAndUrl(Long userId, String url);
+    List<Webhook> findByUserId(Long userId);
 }

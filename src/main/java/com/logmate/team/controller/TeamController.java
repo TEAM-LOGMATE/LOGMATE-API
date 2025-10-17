@@ -23,13 +23,15 @@ public class TeamController {
     private final UserRepository userRepository;
 
     @GetMapping
-    private ResponseEntity<List<TeamDto>> getMyTeams(HttpServletRequest request) {
+    private ResponseEntity<BaseResponse<List<TeamDto>>> getMyTeams(HttpServletRequest request) {
         String email = (String) request.getAttribute("email");
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
         List<TeamDto> myTeams = teamService.getTeamsByUser(user);
-        return ResponseEntity.ok(myTeams);
+        return ResponseEntity.ok(
+                BaseResponse.of(200, "팀 조회 성공", myTeams)
+        );
     }
 
     @PostMapping
@@ -51,7 +53,7 @@ public class TeamController {
                                                             HttpServletRequest httpRequest) {
         String email = (String) httpRequest.getAttribute("email");
         User requester = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("사용자 없음"));
+                .orElseThrow(() -> new RuntimeException("사용자 없음")); 
 
         TeamDto updated = teamService.updateTeam(teamId, request, requester);
         return ResponseEntity.ok(

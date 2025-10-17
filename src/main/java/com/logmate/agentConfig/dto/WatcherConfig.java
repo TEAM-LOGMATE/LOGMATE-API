@@ -12,4 +12,5 @@ public class WatcherConfig {
     private ExporterConfig exporter;
     private ParserConfig parser;
     private FilterConfig filter;
+    private Long dashboardId;
 }

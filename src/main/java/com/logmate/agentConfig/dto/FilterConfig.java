@@ -8,8 +8,10 @@ import java.util.Set;
 
 @Data
 public class FilterConfig {
+    //Tomcat
+    private Set<String> allowedMethods;
+
+    //SpringBoot
     private Set<String> allowedLevels;
-    private Set<String> allowedLoggers;
     private Set<String> requiredKeywords;
-    private LocalDateTime after;
 }

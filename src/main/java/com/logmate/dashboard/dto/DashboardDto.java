@@ -14,8 +14,10 @@ public class DashboardDto {
     private String logPath;
     private String lastModified;
     private Long folderId;
+    private String agentId;
+    private Integer thNum;
 
-    public static DashboardDto from(Dashboard dashboard) {
+    public static DashboardDto from(Dashboard dashboard, String agentId, Integer thNum) {
         return new DashboardDto(
                 dashboard.getId(),
                 dashboard.getName(),
@@ -23,7 +25,16 @@ public class DashboardDto {
                 dashboard.getUpdatedAt() != null
                         ? dashboard.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
                         : null,
-                dashboard.getFolder().getId()
+                dashboard.getFolder().getId(),
+                agentId,
+                thNum
         );
+    }
+    public static DashboardDto from(Dashboard dashboard, String agentId) {
+        return from(dashboard, agentId, null);
+    }
+
+    public static DashboardDto from(Dashboard dashboard) {
+        return from(dashboard, null, null);
     }
 }

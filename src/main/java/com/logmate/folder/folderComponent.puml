@@ -1,0 +1,55 @@
+@startuml
+package "folder" {
+
+  class FolderController {
+    - folderService: FolderService
+    + getTeamFolders(teamId: Long): ResponseEntity
+    + getPersonalFolders(userId: Long): ResponseEntity
+    + createPersonalFolder(userId: Long, request: FolderRequest): ResponseEntity
+    + updateFolder(folderId: Long, request: FolderRequest): ResponseEntity
+    + deleteFolder(folderId: Long): ResponseEntity
+  }
+
+  class FolderService {
+    - folderRepository: FolderRepository
+    - teamRepository: TeamRepository
+    - userRepository: UserRepository
+    + createTeamFolder(teamId: Long, name: String): FolderDto
+    + createPersonalFolder(userId: Long, name: String): FolderDto
+    + getTeamFolders(teamId: Long): List<FolderDto>
+    + getPersonalFolders(userId: Long): List<FolderDto>
+    + updateFolder(folderId: Long, name: String): FolderDto
+    + deleteFolder(folderId: Long): void
+  }
+
+  class FolderDto {
+    - id: Long
+    - name: String
+    - createdAt: String
+    - updatedAt: String
+  }
+
+  class FolderRequest {
+    - name: String
+  }
+
+  class Folder {
+    - id: Long
+    - name: String
+    - team: Team
+    - user: User
+    - dashboards: List<Dashboard>
+  }
+
+  interface FolderRepository
+  interface TeamRepository
+  interface UserRepository
+
+  ' 관계
+  FolderController --> FolderService
+  FolderService --> FolderRepository
+  FolderService --> TeamRepository
+  FolderService --> UserRepository
+  FolderDto --> Folder
+}
+@enduml

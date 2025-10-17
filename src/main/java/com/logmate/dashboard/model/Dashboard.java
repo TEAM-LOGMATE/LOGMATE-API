@@ -18,7 +18,6 @@ public class Dashboard extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     private String name;
     private String logPath;
 

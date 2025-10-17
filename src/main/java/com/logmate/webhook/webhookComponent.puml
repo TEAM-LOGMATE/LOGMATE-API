@@ -1,0 +1,65 @@
+@startuml
+package "webhook" {
+
+  class WebhookController {
+    - webhookService: WebhookService
+    - userRepository: UserRepository
+    + register(dto: WebhookRequestDto, request: HttpServletRequest): ResponseEntity<WebhookResponseDto>
+    + testWebhook(url: String): ResponseEntity<Void>
+    + trigger(message: String, request: HttpServletRequest): ResponseEntity<Void>
+  }
+
+  class WebhookService {
+    - webhookRepository: WebhookRepository
+    + register(userId: Long, dto: WebhookRequestDto): WebhookResponseDto
+    + testSend(url: String): void
+    + sendEventToUserWebhooks(userId: Long, message: String): void
+    - isValidUrl(url: String): boolean
+  }
+
+  class Webhook {
+    - id: Long
+    - userId: Long
+    - type: WebhookType
+    - url: String
+    - active: boolean
+  }
+
+  enum WebhookType {
+    SLACK
+    DISCORD
+    CUSTOM
+  }
+
+  class WebhookRequestDto {
+    - type: WebhookType
+    - url: String
+  }
+
+  class WebhookResponseDto {
+    - id: Long
+    - type: WebhookType
+    - url: String
+    - active: boolean
+  }
+
+  interface WebhookRepository {
+    + findByUserIdAndActiveTrue(userId: Long): List<Webhook>
+  }
+
+  ' 외부 의존
+  class UserRepository
+  class User
+  class JwtUtil
+  class WebClient
+
+  ' 관계
+  WebhookController --> WebhookService
+  WebhookController --> UserRepository
+  WebhookService --> WebhookRepository
+  WebhookService --> WebhookResponseDto
+  WebhookService --> WebhookRequestDto
+  WebhookRepository --> Webhook
+  Webhook --> WebhookType
+}
+@enduml
