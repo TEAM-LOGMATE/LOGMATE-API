@@ -50,7 +50,7 @@ public class AgentConfigService {
 
             //PullerConfig
             PullerConfig pullerConfig = new PullerConfig();
-            pullerConfig.setPullURL("https://15.164.114.73"); // agnet pull 요청 URL
+            pullerConfig.setPullURL("https://www.logmate.shop"); // agnet pull 요청 URL
             int intervalSec = 10; // fallback
             if (request.getPuller() != null && request.getPuller().getIntervalSec() > 0) {
                 intervalSec = request.getPuller().getIntervalSec();
@@ -284,7 +284,7 @@ public class AgentConfigService {
                 PullerConfig puller = dto.getPullerConfig();
                 if (puller == null) {
                     puller = new PullerConfig();
-                    puller.setPullURL("https://15.164.114.73");
+                    puller.setPullURL("https://www.logmate.shop");
                 }
                 puller.setIntervalSec(pullerRequest.getIntervalSec());
                 puller.setEtag(UUID.randomUUID().toString());
