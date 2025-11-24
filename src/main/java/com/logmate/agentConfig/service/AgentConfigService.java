@@ -10,6 +10,7 @@ import com.logmate.agentConfig.repository.LogPipelineConfigRepository;
 import com.logmate.dashboard.service.DashboardService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -24,6 +25,26 @@ public class AgentConfigService {
     private final LogPipelineConfigRepository logPipelineRepository;
     private final ObjectMapper objectMapper;
     private final DashboardService dashboardService;
+
+    @Value("${logmate.pull-url}")
+    private String pullUrl;
+
+    @Value("${logmate.pull-default-interval-sec:10}")
+    private int defaultPullIntervalSec;
+
+    @Value("${logmate.push-base-url}")
+    private String pushBaseUrl;
+
+    @Value("${logmate.push-path-template}")
+    private String pushPathTemplate;
+
+    private String buildPushUrl(String parserType, String agentId, int thNum) {
+        String path = pushPathTemplate
+                .replace("{parserType}", parserType)
+                .replace("{agentId}", agentId)
+                .replace("{thNum}", String.valueOf(thNum));
+        return pushBaseUrl + path;
+    }
 
     public String saveConfig(SaveDashboardConfigRequest request, Long dashboardId) {
         try {
@@ -50,8 +71,8 @@ public class AgentConfigService {
 
             //PullerConfig
             PullerConfig pullerConfig = new PullerConfig();
-            pullerConfig.setPullURL("https://www.logmate.shop"); // agnet pull 요청 URL
-            int intervalSec = 10; // fallback
+            pullerConfig.setPullURL(pullUrl);
+            int intervalSec = defaultPullIntervalSec; // fallback
             if (request.getPuller() != null && request.getPuller().getIntervalSec() > 0) {
                 intervalSec = request.getPuller().getIntervalSec();
             }
@@ -84,11 +105,11 @@ public class AgentConfigService {
 
                 // Exporter
                 ExporterConfig exporter = new ExporterConfig();
-                String pushUrl = String.format(
-                        "http://ec2-3-39-232-72.ap-northeast-2.compute.amazonaws.com:8080/api/v1/streaming/logs/tomcat/%s/%d",
-                        agentId,
-                        watcher.getThNum()
-                );
+                String parserType = wReq.getParserType();
+                if (parserType != null && !parserType.isBlank()) {
+                    String pushUrl = buildPushUrl(parserType, agentId, watcher.getThNum());
+                    exporter.setPushURL(pushUrl);
+                }
                 exporter.setCompressEnabled(wReq.getExporter() != null ? wReq.getExporter().getCompressEnabled() : null);
                 exporter.setRetryIntervalSec(wReq.getExporter() != null ? wReq.getExporter().getRetryIntervalSec() : 0);
                 exporter.setMaxRetryCount(wReq.getExporter() != null ? wReq.getExporter().getMaxRetryCount() : 0);
@@ -137,12 +158,9 @@ public class AgentConfigService {
             List<WatcherConfig> allWatchers = new ArrayList<>();
             for (LogPipelineConfig p : pipelines) {
                 WatcherConfig wc = objectMapper.readValue(p.getConfigJson(), WatcherConfig.class);
-                String pushUrl = String.format(
-                        "http://ec2-3-39-232-72.ap-northeast-2.compute.amazonaws.com:8080/api/v1/streaming/logs/%s/%d",
-                        agentId,
-                        wc.getThNum()
-                );
-                if (wc.getExporter() != null) {
+                String parserType = (wc.getParser() != null) ? wc.getParser().getType() : null;
+                if (parserType != null && !parserType.isBlank() && wc.getExporter() != null) {
+                    String pushUrl = buildPushUrl(parserType, agentId, wc.getThNum());
                     wc.getExporter().setPushURL(pushUrl);
                 }
                 allWatchers.add(wc);
@@ -228,11 +246,8 @@ public class AgentConfigService {
 
             // Exporter
             ExporterConfig exporter = new ExporterConfig();
-            String pushUrl = String.format(
-                    "http://ec2-3-39-232-72.ap-northeast-2.compute.amazonaws.com:8080/api/v1/streaming/logs/%s/%d",
-                    agentId,
-                    pipeline.getThNum()
-            );
+            String parserType = request.getParserType();
+            String pushUrl = buildPushUrl(parserType, agentId, pipeline.getThNum());
             exporter.setPushURL(pushUrl);
 
             exporter.setCompressEnabled(request.getExporter() != null ? request.getExporter().getCompressEnabled() : null);
@@ -284,7 +299,7 @@ public class AgentConfigService {
                 PullerConfig puller = dto.getPullerConfig();
                 if (puller == null) {
                     puller = new PullerConfig();
-                    puller.setPullURL("https://www.logmate.shop");
+                    puller.setPullURL(pullUrl);
                 }
                 puller.setIntervalSec(pullerRequest.getIntervalSec());
                 puller.setEtag(UUID.randomUUID().toString());
