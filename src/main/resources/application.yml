@@ -35,3 +35,9 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.web.servlet: DEBUG
     org.springframework.security: DEBUG
+
+logmate:
+  pull-url: ${LOGMATE_PULL_URL}
+  pull-default-interval-sec: ${LOGMATE_PULL_DEFAULT_INTERVAL:10}
+  push-base-url: ${LOGMATE_PUSH_BASE_URL}
+  push-path-template: ${LOGMATE_PUSH_PATH_TEMPLATE:/api/v1/streaming/logs/{parserType}/{agentId}/{thNum}}
